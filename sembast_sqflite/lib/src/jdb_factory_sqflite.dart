@@ -54,7 +54,7 @@ class JdbFactorySqflite implements jdb.JdbFactory {
               batch.execute('''
               CREATE TABLE $_infoStore (
                 $_idPath TEXT PRIMARY KEY,
-                $_valuePath BLOB
+                $_valuePath TEXT
               )
               ''');
               batch.execute('DROP TABLE IF EXISTS $_entryStore');
@@ -146,7 +146,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     var entry = jdb.JdbReadEntry()
       ..id = map[_idPath] as int
       ..record = StoreRef(map[_storePath] as String).record(map[_keyPath])
-      ..value = map[_valuePath]
+      ..value = _decodeValue(map[_valuePath] as String)
       // Deleted is an int
       ..deleted = map[_deletedPath] == 1;
     return entry;
@@ -201,7 +201,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
 
   /// Never null
   jdb.JdbInfoEntry _infoEntryFromMap(String id, Map map) {
-    var rawValue = map == null ? null : map[_valuePath];
+    var rawValue = map == null ? null : map[_valuePath] as String;
     return jdb.JdbInfoEntry()
       ..id = id
       ..value = _decodeValue(rawValue);
@@ -243,8 +243,8 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
 
   Future _putInfoInt(
           sqflite.DatabaseExecutor executor, String id, int revision) =>
-      executor.insert(
-          _infoStore, <String, dynamic>{_idPath: id, _valuePath: revision},
+      executor.insert(_infoStore,
+          <String, dynamic>{_idPath: id, _valuePath: _encodeValue(revision)},
           conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
 
   Future _putRevision(sqflite.DatabaseExecutor executor, int revision) =>
@@ -265,7 +265,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
             columns: [_valuePath], where: '$_idPath = ?', whereArgs: [id]))
         .firstWhere((_) => true, orElse: () => null);
     if (map != null) {
-      return map[_valuePath] as int;
+      return _decodeValue(map[_valuePath] as String) as int;
     }
     return null;
   }
@@ -274,9 +274,8 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       value == null ? null : jsonEncode(value);
 
   /// Special handling for int
-  dynamic _decodeValue(dynamic value) => value == null
-      ? null
-      : (value is int ? value : jsonDecode(value as String));
+  dynamic _decodeValue(String value) =>
+      value == null ? null : jsonDecode(value);
   Future<int> _txnGetRevision(sqflite.Transaction txn) =>
       _getInfoInt(txn, _revisionKey);
 
@@ -287,6 +286,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     for (var jdbWriteEntry in entries) {
       var store = jdbWriteEntry.record.store.name;
       var key = jdbWriteEntry.record.key;
+      var value = _encodeValue(jdbWriteEntry.value);
 
       /*
       var sqfliteKey = await index.getKey([store, key]);
@@ -303,7 +303,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
           <String, dynamic>{
             _storePath: store,
             _keyPath: key,
-            _valuePath: jdbWriteEntry.value,
+            _valuePath: value,
             if (jdbWriteEntry.deleted ?? false) _deletedPath: 1
           },
           conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
@@ -447,10 +447,10 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       sqflite.Transaction txn, String name) async {
     var isEntryStore = name == _entryStore;
     var list = <Map<String, dynamic>>[];
-    var maps = await txn.query(name);
+    var maps = await txn.query(name, orderBy: '$_idPath ASC');
     for (var map in maps) {
       var id = map[_idPath];
-      var value = _decodeValue(map[_valuePath]);
+      var value = _decodeValue(map[_valuePath] as String);
       if (isEntryStore) {
         value = <String, dynamic>{'value': value};
         // hack to remove the store when testing
