@@ -1,0 +1,12 @@
+name: sembast_sqflite_support
+description: A simple command-line application.
+publish_to: none
+
+environment:
+  sdk: '>=2.7.0 <3.0.0'
+
+dev_dependencies:
+  pedantic:
+  test:
+  process_run: '>=0.10.7'
+  path:

@@ -1,0 +1,13 @@
+language: dart
+sudo: required
+dist: trusty
+dart:
+  - stable
+  - dev
+script:
+  - cd sembast_sqflite_support/
+  - pub get
+  - dart tool/travis.dart
+matrix:
+  allow_failures:
+    - dart: dev

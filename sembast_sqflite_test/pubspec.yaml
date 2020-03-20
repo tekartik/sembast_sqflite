@@ -1,0 +1,24 @@
+name: sembast_sqflite_test
+description: sembast sqflite test
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=2.7.0-dev.0 <3.0.0"
+
+dependencies:
+  sembast_sqflite: '>=0.1.0 <2.0.0'
+
+dev_dependencies:
+  sqflite_common_ffi: '>=1.0.0 <3.0.0'
+  test:
+  process_run: '>=0.10.3'
+  pedantic: '>=1.8.0'
+  sembast_test:
+    git:
+      url: git://github.com/tekartik/sembast.dart
+      path: sembast_test
+
+dependency_overrides:
+  sembast_sqflite:
+    path: ../sembast_sqflite

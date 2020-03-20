@@ -1,0 +1,18 @@
+name: sembast_sqflite
+description: sembast NoSQL database support on top of sqflite
+homepage: https://github.com/tekartik/sembast_sqflite/tree/master/sembast_sqflite
+version: 0.1.0
+
+environment:
+  sdk: ">=2.7.0-dev.0 <3.0.0"
+
+dependencies:
+  sembast: '>=2.3.0 <4.0.0'
+  sqflite_common: '>=1.0.0+1 <3.0.0'
+  meta: '>=1.1.6 <3.0.0'
+
+dev_dependencies:
+  sqflite_common_ffi: '>=1.0.0 <3.0.0'
+  test:
+  process_run: '>=0.10.3'
+  pedantic: '>=1.8.0'
