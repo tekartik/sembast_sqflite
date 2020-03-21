@@ -25,5 +25,22 @@ Future main() async {
       expect(await record.get(db), 'value');
       await db.close();
     });
+
+    test('exists', () async {
+      var store = StoreRef<String, String>.main();
+      var record = store.record('key');
+
+      var dbName = 'exists.db';
+      await factory.deleteDatabase(dbName);
+      // create an empty db
+      var sqfliteDb = await databaseFactoryFfi.openDatabase(dbName);
+      expect(await sqfliteDb.getVersion(), 0);
+      await sqfliteDb.close();
+
+      var db = await factory.openDatabase(dbName);
+      await record.put(db, 'value');
+      expect(await record.get(db), 'value');
+      await db.close();
+    });
   });
 }

@@ -28,6 +28,7 @@ class JdbFactorySqflite implements jdb.JdbFactory {
   /// Sqflite factory
   JdbFactorySqflite(this.sqfliteDatabaseFactory);
 
+  static const _sqfliteDbVersion = 1;
   var _lastId = 0;
 
   /// The sqflite factory used
@@ -42,23 +43,20 @@ class JdbFactorySqflite implements jdb.JdbFactory {
     if (_debug) {
       print('[sqflite-$id] opening $path');
     }
-    var sqfliteDb = await sqfliteDatabaseFactory.openDatabase(path,
-        options: sqflite.OpenDatabaseOptions(
-            version: 1,
-            onCreate: (db, version) async {
-              if (_debug) {
-                print('[sqflite-$id] creating database $path');
-              }
-              var batch = db.batch();
-              batch.execute('DROP TABLE IF EXISTS $_infoStore');
-              batch.execute('''
+    Future initDatabase(sqflite.Database db) async {
+      if (_debug) {
+        print('[sqflite-$id] creating database $path');
+      }
+      var batch = db.batch();
+      batch.execute('DROP TABLE IF EXISTS $_infoStore');
+      batch.execute('''
               CREATE TABLE $_infoStore (
                 $_idPath TEXT PRIMARY KEY,
                 $_valuePath TEXT
               )
               ''');
-              batch.execute('DROP TABLE IF EXISTS $_entryStore');
-              batch.execute('''
+      batch.execute('DROP TABLE IF EXISTS $_entryStore');
+      batch.execute('''
               CREATE TABLE $_entryStore (
                 $_idPath INTEGER PRIMARY KEY AUTOINCREMENT,
                 $_storePath TEXT NON NULL,
@@ -68,11 +66,23 @@ class JdbFactorySqflite implements jdb.JdbFactory {
                 UNIQUE($_storePath, $_keyPath)
               )
               ''');
-              batch.execute(
-                  'CREATE UNIQUE INDEX $_recordIndex ON $_entryStore($_storePath, $_keyPath)');
-              batch.execute(
-                  'CREATE INDEX $_deletedIndex ON $_entryStore($_deletedPath)');
-              await batch.commit(noResult: true);
+      batch.execute(
+          'CREATE UNIQUE INDEX $_recordIndex ON $_entryStore($_storePath, $_keyPath)');
+      batch.execute(
+          'CREATE INDEX $_deletedIndex ON $_entryStore($_deletedPath)');
+      await batch.commit(noResult: true);
+    }
+
+    var sqfliteDb = await sqfliteDatabaseFactory.openDatabase(path,
+        options: sqflite.OpenDatabaseOptions(
+            version: _sqfliteDbVersion,
+            onCreate: (db, version) async {
+              await initDatabase(db);
+            },
+            onUpgrade: (db, oldVersion, newVersion) async {
+              if (oldVersion < _sqfliteDbVersion) {
+                await initDatabase(db);
+              }
             }));
     if (sqfliteDb != null) {
       var db = JdbDatabaseSqflite(this, sqfliteDb, id, path);
