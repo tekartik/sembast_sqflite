@@ -38,7 +38,8 @@ class JdbFactorySqflite implements jdb.JdbFactory {
   final databases = <String, List<JdbDatabaseSqflite>>{};
 
   @override
-  Future<jdb.JdbDatabase> open(String path) async {
+  Future<jdb.JdbDatabase> open(String path,
+      {DatabaseOpenOptions options}) async {
     var id = ++_lastId;
     if (_debug) {
       print('[sqflite-$id] opening $path');
@@ -85,7 +86,7 @@ class JdbFactorySqflite implements jdb.JdbFactory {
               }
             }));
     if (sqfliteDb != null) {
-      var db = JdbDatabaseSqflite(this, sqfliteDb, id, path);
+      var db = JdbDatabaseSqflite(this, sqfliteDb, id, path, options);
 
       /// Add to our list
       if (path != null) {
@@ -144,12 +145,13 @@ class JdbFactorySqflite implements jdb.JdbFactory {
 /// In memory database.
 class JdbDatabaseSqflite implements jdb.JdbDatabase {
   /// New in memory database.
-  JdbDatabaseSqflite(
-      this._factory, this._sqfliteDatabase, this._id, this._path);
+  JdbDatabaseSqflite(this._factory, this._sqfliteDatabase, this._id, this._path,
+      this._options);
 
   final sqflite.Database _sqfliteDatabase;
   final int _id;
   final String _path;
+  final jdb.DatabaseOpenOptions _options;
   final _revisionUpdateController = StreamController<int>();
 
   jdb.JdbReadEntry _entryFromCursor(Map map) {
@@ -284,8 +286,10 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     if (value == null) {
       return null;
     }
-    // TODO handle codec
-    return jsonEncode(sembastCodecDefault.jsonEncodableCodec.encode(value));
+    var encodable = (_options?.codec?.jsonEncodableCodec ??
+            jdb.sembastDefaultJsonEncodableCodec)
+        .encode(value);
+    return (_options?.codec?.codec ?? json).encode(encodable);
   }
 
   /// Special handling for int
@@ -293,8 +297,10 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     if (value == null) {
       return null;
     }
-    // TODO handle codec
-    return sembastCodecDefault.jsonEncodableCodec.decode(jsonDecode(value));
+    var encodable = (_options?.codec?.codec ?? json).decode(value);
+    return (_options?.codec?.jsonEncodableCodec ??
+            jdb.sembastDefaultJsonEncodableCodec)
+        .decode(encodable);
   }
 
   String _encodeValue(dynamic value) =>

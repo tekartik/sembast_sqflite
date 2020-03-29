@@ -1,4 +1,4 @@
-## 0.2.0
+## 0.2.0+1
 
 * Add `Blob` and `Timestamp` support
 
