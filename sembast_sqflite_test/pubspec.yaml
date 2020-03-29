@@ -18,6 +18,7 @@ dev_dependencies:
     git:
       url: git://github.com/tekartik/sembast.dart
       path: sembast_test
+      ref: develop
 
 dependency_overrides:
   sembast_sqflite:

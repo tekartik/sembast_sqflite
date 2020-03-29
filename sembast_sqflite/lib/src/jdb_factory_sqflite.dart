@@ -156,7 +156,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     var entry = jdb.JdbReadEntry()
       ..id = map[_idPath] as int
       ..record = StoreRef(map[_storePath] as String).record(map[_keyPath])
-      ..value = _decodeValue(map[_valuePath] as String)
+      ..value = _decodeRecordValue(map[_valuePath] as String)
       // Deleted is an int
       ..deleted = map[_deletedPath] == 1;
     return entry;
@@ -280,12 +280,29 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     return null;
   }
 
+  String _encodeRecordValue(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    // TODO handle codec
+    return jsonEncode(sembastCodecDefault.jsonEncodableCodec.encode(value));
+  }
+
+  /// Special handling for int
+  dynamic _decodeRecordValue(String value) {
+    if (value == null) {
+      return null;
+    }
+    // TODO handle codec
+    return sembastCodecDefault.jsonEncodableCodec.decode(jsonDecode(value));
+  }
+
   String _encodeValue(dynamic value) =>
       value == null ? null : jsonEncode(value);
 
-  /// Special handling for int
   dynamic _decodeValue(String value) =>
       value == null ? null : jsonDecode(value);
+
   Future<int> _txnGetRevision(sqflite.Transaction txn) =>
       _getInfoInt(txn, _revisionKey);
 
@@ -296,7 +313,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     for (var jdbWriteEntry in entries) {
       var store = jdbWriteEntry.record.store.name;
       var key = jdbWriteEntry.record.key;
-      var value = _encodeValue(jdbWriteEntry.value);
+      var value = _encodeRecordValue(jdbWriteEntry.value);
 
       /*
       var sqfliteKey = await index.getKey([store, key]);
