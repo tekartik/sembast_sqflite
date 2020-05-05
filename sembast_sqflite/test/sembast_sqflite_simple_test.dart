@@ -106,7 +106,6 @@ Future main() async {
           'id': 1,
           'store': '_main',
           'key': 'key',
-          'value': '{"@Timestamp":"1970-01-01T00:00:01.000000002Z"}',
           'value':
               'eyJAVGltZXN0YW1wIjoiMTk3MC0wMS0wMVQwMDowMDowMS4wMDAwMDAwMDJaIn0=',
           'deleted': null
