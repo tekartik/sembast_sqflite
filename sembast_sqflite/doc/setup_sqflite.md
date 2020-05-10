@@ -2,7 +2,16 @@
 
 ### Flutter iOS/Android/MacOS
 
-* Flutter context needed.
+**Flutter context needed.**
+
+You have to import the `sqflite` dependency in a flutter context.
+
+`pubspec.yaml`:
+```yaml
+dependencies:
+  sembast_sqflite:
+  sqflite:
+```
 
 The default factory based on sqflite can be created this way:
 

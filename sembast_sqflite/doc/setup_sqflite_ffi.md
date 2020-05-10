@@ -9,6 +9,15 @@ Supports Windows/Linux/MacOS Flutter/VM
 
 *FFI is not tested nor supported on mobile yet*
 
+You have to import the `sqflite_common_ffi` dependency to use the FFI based implementation.
+
+`pubspec.yaml`:
+```yaml
+dependencies:
+  sembast_sqflite:
+  sqflite_common_ffi:
+```
+
 ```dart
 import 'package:sembast_sqflite/sembast_sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as sqflite_ffi;
