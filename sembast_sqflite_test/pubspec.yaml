@@ -11,6 +11,7 @@ dependencies:
 
 dev_dependencies:
   sqflite_common_ffi: '>=1.0.0 <3.0.0'
+  sqflite:
   test:
   process_run: '>=0.10.3'
   pedantic: '>=1.8.0'
