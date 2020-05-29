@@ -23,7 +23,7 @@ dartfmt -n --set-exit-if-changed .
 
   for (var dir in [
     'sembast_sqflite',
-    'sembast_sqflite_test',
+    'sembast_sqflite_common_test',
   ]) {
     shell = shell.pushd(join('..', dir));
     await shell.run('''
