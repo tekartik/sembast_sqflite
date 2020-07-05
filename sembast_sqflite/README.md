@@ -57,3 +57,8 @@ might consider that it is not a well known robust database system.
 Here sqflite is used as the based of a journal database that provides data to sembast, allowing a fast all-in-memory 
 access and safe cross process database storage and transaction mechanism.
 
+# Usage
+
+* `sembast_sqflite` should be used from the main isolate only
+* While being cross-process safe, you might encounter locked access when using multiple transactions are in progress, which could happen while debugging.
+* Applications should not rely on internal [storage format](https://github.com/tekartik/sembast_sqflite/tree/master/sembast_sqflite/doc/storage_format.md)
