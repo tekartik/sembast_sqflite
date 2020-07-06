@@ -360,49 +360,18 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   @override
   Future<List<int>> generateUniqueIntKeys(String store, int count) async {
     var keys = <int>[];
-    await _sqfliteDatabase.transaction((txn) async {
-      var infoKey = _storeLastIdKey(store);
-      var lastId = (await _getInfoInt(txn, infoKey)) ?? 0;
-      for (var i = 0; i < count; i++) {
-        while (true) {
-          lastId++;
-          // Check if record exists
-          if ((await txn.query(_entryStore,
-                  columns: [_idPath],
-                  where: '$_storePath = ? AND $_keyPath = ?',
-                  whereArgs: [store, lastId]))
-              .isEmpty) {
-            break;
-          }
-        }
-        keys.add(lastId);
-      }
-      await _putInfoInt(txn, infoKey, lastId);
-    });
+    var infoKey = _storeLastIdKey(store);
+    var lastId = (await _getInfoInt(_sqfliteDatabase, infoKey)) ?? 0;
+    for (var i = 0; i < count; i++) {
+      lastId++;
+      keys.add(lastId);
+    }
     return keys;
   }
 
   @override
   Future<List<String>> generateUniqueStringKeys(String store, int count) async {
-    var keys = <String>[];
-    await _sqfliteDatabase.transaction((txn) async {
-      for (var i = 0; i < count; i++) {
-        String key;
-        while (true) {
-          key = generateStringKey();
-          // Check if record exists
-          if ((await txn.query(_entryStore,
-                  columns: [_idPath],
-                  where: '$_storePath = ? AND $_keyPath = ?',
-                  whereArgs: [store, key]))
-              .isEmpty) {
-            break;
-          }
-        }
-        keys.add(key);
-      }
-    });
-    return keys;
+    return List.generate(count, (index) => generateStringKey()).toList();
   }
 
   @override
