@@ -1,3 +1,6 @@
+@TestOn('vm')
+library sembast_sqflite.test.sembast_sqflite_simple_test;
+
 import 'package:sembast/sembast.dart';
 import 'package:sembast/timestamp.dart';
 import 'package:sembast_sqflite/sembast_sqflite.dart';
