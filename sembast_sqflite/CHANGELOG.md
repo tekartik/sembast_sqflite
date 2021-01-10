@@ -1,3 +1,7 @@
+## 2.0.0-nullsafety.0
+
+* `nnbd` support
+
 ## 1.0.0
 
 * First stable version

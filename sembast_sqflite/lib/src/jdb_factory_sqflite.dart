@@ -313,7 +313,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     for (var jdbWriteEntry in entries) {
       var store = jdbWriteEntry.record.store.name;
       var key = jdbWriteEntry.record.key;
-      var value = _encodeRecordValue(jdbWriteEntry.value!);
+      var value = _encodeRecordValue(jdbWriteEntry.value);
 
       /*
       var sqfliteKey = await index.getKey([store, key]);

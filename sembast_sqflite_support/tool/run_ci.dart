@@ -5,6 +5,7 @@
 // In the future, remove this 2.9 comment or run using: dart --enable-experiment=non-nullable --no-sound-null-safety run tool/travis.dart
 import 'dart:io';
 
+import 'package:path/path.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:process_run/shell.dart';
 import 'package:dev_test/package.dart';
@@ -21,9 +22,7 @@ Future main() async {
       'sembast_sqflite_common_test',
       'sembast_sqflite_flutter_test',
     ]) {
-      shell = shell.pushd(dir);
-      await packageRunCi(dir);
-      shell = shell.popd();
+      await packageRunCi(join('..', dir));
     }
   } else {
     stderr.writeln('ci test skipped for $dartVersion');
