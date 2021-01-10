@@ -3,6 +3,7 @@ sudo: required
 dist: bionic
 dart:
   - stable
+  - beta
   - dev
 script:
   - cd sembast_sqflite_support/
@@ -10,4 +11,4 @@ script:
   - dart tool/travis.dart
 matrix:
   allow_failures:
-    - dart: dev
+    - dart: stable

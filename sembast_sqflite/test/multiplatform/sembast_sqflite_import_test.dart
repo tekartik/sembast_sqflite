@@ -4,7 +4,8 @@ import 'package:test/test.dart';
 Future main() async {
   group('import', () {
     test('open', () async {
-      getDatabaseFactorySqflite(null);
+      // ignore: unnecessary_statements
+      getDatabaseFactorySqflite;
     });
   });
 }

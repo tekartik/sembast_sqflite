@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:sembast/sembast.dart';
 import 'package:sembast_sqflite/src/constant_import.dart';
 import 'package:sembast_sqflite/src/jdb_import.dart' as jdb;
@@ -39,7 +40,7 @@ class JdbFactorySqflite implements jdb.JdbFactory {
 
   @override
   Future<jdb.JdbDatabase> open(String path,
-      {DatabaseOpenOptions options}) async {
+      {DatabaseOpenOptions? options}) async {
     var id = ++_lastId;
     if (_debug) {
       print('[sqflite-$id] opening $path');
@@ -85,18 +86,14 @@ class JdbFactorySqflite implements jdb.JdbFactory {
                 await initDatabase(db);
               }
             }));
-    if (sqfliteDb != null) {
-      var db = JdbDatabaseSqflite(this, sqfliteDb, id, path, options);
 
-      /// Add to our list
-      if (path != null) {
-        var list = databases[path] ??= <JdbDatabaseSqflite>[];
-        list.add(db);
-      }
-      return db;
-    }
+    var db = JdbDatabaseSqflite(this, sqfliteDb, id, path, options);
 
-    return null;
+    /// Add to our list
+    var list = databases[path] ??= <JdbDatabaseSqflite>[];
+    list.add(db);
+
+    return db;
   }
 
   @override
@@ -105,9 +102,7 @@ class JdbFactorySqflite implements jdb.JdbFactory {
       if (_debug) {
         print('[sqflite] deleting $path');
       }
-      if (path != null) {
-        databases.remove(path);
-      }
+      databases.remove(path);
       await sqfliteDatabaseFactory.deleteDatabase(path);
       if (_debug) {
         print('[sqflite] deleted $path');
@@ -119,15 +114,15 @@ class JdbFactorySqflite implements jdb.JdbFactory {
 
   @override
   Future<bool> exists(String path) async {
-    sqflite.Database db;
+    late sqflite.Database db;
     try {
       db = await sqfliteDatabaseFactory.openDatabase(path,
           options: sqflite.OpenDatabaseOptions(readOnly: true));
 
       var meta = (await db.query(_infoStore,
               where: '$_keyPath = ?', whereArgs: [jdb.metaKey]))
-          .firstWhere((_) => true, orElse: () => null);
-      if (meta is Map && meta['sembast'] is int) {
+          .firstWhereOrNull((_) => true);
+      if (meta is Map && meta!['sembast'] is int) {
         return true;
       }
     } catch (_) {} finally {
@@ -151,14 +146,14 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   final sqflite.Database _sqfliteDatabase;
   final int _id;
   final String _path;
-  final jdb.DatabaseOpenOptions _options;
+  final jdb.DatabaseOpenOptions? _options;
   final _revisionUpdateController = StreamController<int>();
 
   jdb.JdbReadEntry _entryFromCursor(Map map) {
     var entry = jdb.JdbReadEntry()
       ..id = map[_idPath] as int
       ..record = StoreRef(map[_storePath] as String).record(map[_keyPath])
-      ..value = _decodeRecordValue(map[_valuePath] as String)
+      ..value = _decodeRecordValue(map[_valuePath] as String?)
       // Deleted is an int
       ..deleted = map[_deletedPath] == 1;
     return entry;
@@ -173,7 +168,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   // TODO read by <n> records
   @override
   Stream<jdb.JdbReadEntry> get entries {
-    StreamController<jdb.JdbReadEntry> ctlr;
+    late StreamController<jdb.JdbReadEntry> ctlr;
     ctlr = StreamController<jdb.JdbReadEntry>(onListen: () async {
       var maps = await _sqfliteDatabase.query(_entryStore);
       for (var map in maps) {
@@ -194,26 +189,25 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   void close() {
     if (!_closed) {
       // Clear from our list of open database
-      if (_path != null) {
-        var list = _factory.databases[_path];
-        if (list != null) {
-          list.remove(this);
-          if (list.isEmpty) {
-            _factory.databases.remove(_path);
-          }
+
+      var list = _factory.databases[_path];
+      if (list != null) {
+        list.remove(this);
+        if (list.isEmpty) {
+          _factory.databases.remove(_path);
         }
       }
       if (_debug) {
         print('$_debugPrefix closing');
       }
       _closed = true;
-      _sqfliteDatabase?.close();
+      _sqfliteDatabase.close();
     }
   }
 
   /// Never null
-  jdb.JdbInfoEntry _infoEntryFromMap(String id, Map map) {
-    var rawValue = map == null ? null : map[_valuePath] as String;
+  jdb.JdbInfoEntry _infoEntryFromMap(String id, Map? map) {
+    var rawValue = map == null ? null : map[_valuePath] as String?;
     return jdb.JdbInfoEntry()
       ..id = id
       ..value = _decodeValue(rawValue);
@@ -227,7 +221,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       sqflite.DatabaseExecutor executor, String id) async {
     var map = (await executor.query(_infoStore,
             columns: [_valuePath], where: '$_idPath = ?', whereArgs: [id]))
-        .firstWhere((_) => true, orElse: () => null);
+        .firstWhereOrNull((_) => true);
     return _infoEntryFromMap(id, map);
   }
 
@@ -272,17 +266,17 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   Future _txnPutDeltaMinRevision(sqflite.Transaction txn, int revision) =>
       _putDeltaMinRevision(txn, revision);
 
-  Future<int> _getInfoInt(sqflite.DatabaseExecutor executor, String id) async {
+  Future<int?> _getInfoInt(sqflite.DatabaseExecutor executor, String id) async {
     var map = (await executor.query(_infoStore,
             columns: [_valuePath], where: '$_idPath = ?', whereArgs: [id]))
-        .firstWhere((_) => true, orElse: () => null);
+        .firstWhereOrNull((_) => true);
     if (map != null) {
-      return _decodeValue(map[_valuePath] as String) as int;
+      return _decodeValue(map[_valuePath] as String?) as int?;
     }
     return null;
   }
 
-  String _encodeRecordValue(dynamic value) {
+  String? _encodeRecordValue(Object? value) {
     if (value == null) {
       return null;
     }
@@ -293,33 +287,33 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   }
 
   /// Special handling for int
-  dynamic _decodeRecordValue(String value) {
+  dynamic _decodeRecordValue(String? value) {
     if (value == null) {
       return null;
     }
-    var encodable = (_options?.codec?.codec ?? json).decode(value);
+    var encodable = (_options?.codec?.codec ?? json).decode(value)!;
     return (_options?.codec?.jsonEncodableCodec ??
             jdb.sembastDefaultJsonEncodableCodec)
         .decode(encodable);
   }
 
-  String _encodeValue(dynamic value) =>
+  String? _encodeValue(dynamic value) =>
       value == null ? null : jsonEncode(value);
 
-  dynamic _decodeValue(String value) =>
+  dynamic _decodeValue(String? value) =>
       value == null ? null : jsonDecode(value);
 
-  Future<int> _txnGetRevision(sqflite.Transaction txn) =>
+  Future<int?> _txnGetRevision(sqflite.Transaction txn) =>
       _getInfoInt(txn, _revisionKey);
 
   // Return the last entryId
-  Future<int> _txnAddEntries(
+  Future<int?> _txnAddEntries(
       sqflite.Transaction txn, List<jdb.JdbWriteEntry> entries) async {
-    int lastEntryId;
+    int? lastEntryId;
     for (var jdbWriteEntry in entries) {
       var store = jdbWriteEntry.record.store.name;
       var key = jdbWriteEntry.record.key;
-      var value = _encodeRecordValue(jdbWriteEntry.value);
+      var value = _encodeRecordValue(jdbWriteEntry.value!);
 
       /*
       var sqfliteKey = await index.getKey([store, key]);
@@ -337,11 +331,11 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
             _storePath: store,
             _keyPath: key,
             _valuePath: value,
-            if (jdbWriteEntry.deleted ?? false) _deletedPath: 1
+            if (jdbWriteEntry.deleted) _deletedPath: 1
           },
           conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
       // Save the revision in memory!
-      jdbWriteEntry?.txnRecord?.record?.revision = lastEntryId;
+      jdbWriteEntry.txnRecord?.record.revision = lastEntryId;
       if (_debug) {
         print('$_debugPrefix added entry $lastEntryId $jdbWriteEntry');
       }
@@ -376,8 +370,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
 
   @override
   Stream<jdb.JdbEntry> entriesAfterRevision(int revision) {
-    revision ??= 0;
-    StreamController<jdb.JdbEntry> ctlr;
+    late StreamController<jdb.JdbEntry> ctlr;
     ctlr = StreamController<jdb.JdbEntry>(onListen: () async {
       // TODO by page?
       var maps = await _sqfliteDatabase.query(_entryStore,
@@ -397,7 +390,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
 
   @override
   Future<int> getRevision() async {
-    return (await getInfoEntry(_revisionKey))?.value as int;
+    return ((await getInfoEntry(_revisionKey)).value as int?) ?? 0;
   }
 
   @override
@@ -413,18 +406,18 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       StorageJdbWriteQuery query) async {
     return await _sqfliteDatabase.transaction((txn) async {
       var expectedRevision = query.revision ?? 0;
-      var readRevision = (await _txnGetRevision(txn)) ?? 0;
+      int? readRevision = (await _txnGetRevision(txn)) ?? 0;
       var success = (expectedRevision == readRevision);
 
       if (success) {
-        if (query.entries?.isNotEmpty ?? false) {
+        if (query.entries.isNotEmpty) {
           readRevision = await _txnAddEntries(txn, query.entries);
           // Set revision info
           if (readRevision != null) {
             await _txnPutRevision(txn, readRevision);
           }
         }
-        if (query.infoEntries?.isNotEmpty ?? false) {
+        if (query.infoEntries.isNotEmpty) {
           for (var infoEntry in query.infoEntries) {
             await _txnSetInfoEntry(txn, infoEntry);
           }
@@ -452,7 +445,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     var maps = await txn.query(name, orderBy: '$_idPath ASC');
     for (var map in maps) {
       var id = map[_idPath];
-      var value = _decodeValue(map[_valuePath] as String);
+      var value = _decodeValue(map[_valuePath] as String?);
       if (isEntryStore) {
         value = <String, dynamic>{'value': value};
         // hack to remove the store when testing
@@ -482,7 +475,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
           columns: [_idPath], where: '$_deletedPath = 1');
       for (var map in maps) {
         var revision = map[_idPath] as int;
-        if (revision > newDeltaMinRevision && revision <= currentRevision) {
+        if (revision > newDeltaMinRevision && revision <= currentRevision!) {
           newDeltaMinRevision = revision;
           await txn.delete(_entryStore, where: '$_idPath = $revision');
         }
@@ -496,10 +489,12 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
 
   @override
   Future<int> getDeltaMinRevision() async =>
-      (await _getInfoInt(_sqfliteDatabase, jdbDeltaMinRevisionKey) ?? 0);
+      (await (_getInfoInt(_sqfliteDatabase, jdbDeltaMinRevisionKey)
+              as FutureOr<int>?) ??
+          0);
 
   Future<int> _txnGetDeltaMinRevision(sqflite.Transaction txn) async =>
-      (await _getInfoInt(txn, jdbDeltaMinRevisionKey) ?? 0);
+      (await (_getInfoInt(txn, jdbDeltaMinRevisionKey) as FutureOr<int>?) ?? 0);
 
   @override
   Future clearAll() async {
