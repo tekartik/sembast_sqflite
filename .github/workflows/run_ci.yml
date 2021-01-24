@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: ./sqflite_support
+        working-directory: ./sembast_sqflite_support
     strategy:
       fail-fast: false
       matrix:
