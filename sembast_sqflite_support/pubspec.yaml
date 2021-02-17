@@ -12,4 +12,5 @@ dev_dependencies:
   pedantic:
   test:
   process_run: '>=0.10.7'
+  dev_test:
   path:

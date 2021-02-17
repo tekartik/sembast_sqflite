@@ -2,9 +2,10 @@
 
 * `nnbd` support
 
-## 1.0.0
+## 1.0.0+1
 
 * First stable version
+* pre-nnbd only
 
 ## 0.2.0+2
 
