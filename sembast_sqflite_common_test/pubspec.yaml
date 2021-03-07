@@ -1,10 +1,10 @@
 name: sembast_sqflite_common_test
 description: sembast sqflite common test
-version: 0.4.0
+version: 0.5.0
 publish_to: none
 
 environment:
-  sdk: ">=2.8.0 <3.0.0"
+  sdk: '>=2.12.0-0 <3.0.0'
 
 dependencies:
   sembast_sqflite: '>=0.1.0 <2.0.0'

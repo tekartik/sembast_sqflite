@@ -233,7 +233,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       sqflite.DatabaseExecutor executor, jdb.JdbInfoEntry entry) async {
     var value = _encodeValue(entry.value);
     await executor.insert(
-        _infoStore, <String, dynamic>{_idPath: entry.id, _valuePath: value},
+        _infoStore, <String, Object?>{_idPath: entry.id, _valuePath: value},
         conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
   }
 
@@ -250,7 +250,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   Future _putInfoInt(
           sqflite.DatabaseExecutor executor, String id, int revision) =>
       executor.insert(_infoStore,
-          <String, dynamic>{_idPath: id, _valuePath: _encodeValue(revision)},
+          <String, Object?>{_idPath: id, _valuePath: _encodeValue(revision)},
           conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
 
   Future _putRevision(sqflite.DatabaseExecutor executor, int revision) =>
@@ -327,7 +327,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
 
       lastEntryId = await txn.insert(
           _entryStore,
-          <String, dynamic>{
+          <String, Object?>{
             _storePath: store,
             _keyPath: key,
             _valuePath: value,
@@ -429,8 +429,8 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   }
 
   @override
-  Future<Map<String, dynamic>> exportToMap() async {
-    var map = <String, dynamic>{};
+  Future<Map<String, Object?>> exportToMap() async {
+    var map = <String, Object?>{};
     await _sqfliteDatabase.transaction((txn) async {
       map['infos'] = await _txnStoreToDebugMap(txn, _infoStore);
       map['entries'] = await _txnStoreToDebugMap(txn, _entryStore);
@@ -438,29 +438,32 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     return map;
   }
 
-  Future<List<Map<String, dynamic>>> _txnStoreToDebugMap(
+  Future<List<Map<String, Object?>>> _txnStoreToDebugMap(
       sqflite.Transaction txn, String name) async {
     var isEntryStore = name == _entryStore;
-    var list = <Map<String, dynamic>>[];
+    var list = <Map<String, Object?>>[];
     var maps = await txn.query(name, orderBy: '$_idPath ASC');
     for (var map in maps) {
       var id = map[_idPath];
       var value = _decodeValue(map[_valuePath] as String?);
       if (isEntryStore) {
-        value = <String, dynamic>{'value': value};
+        var entryValue = <String, Object?>{};
         // hack to remove the store when testing
         var store = map[_storePath];
         if (store != '_main') {
-          value['store'] = store;
+          entryValue['store'] = store;
         }
-        value['key'] = map[_keyPath];
+        entryValue['key'] = map[_keyPath];
         // Hack to change deleted from 1 to true
         if (map[_deletedPath] == 1) {
-          value[_deletedPath] = true;
+          entryValue[_deletedPath] = true;
+        } else {
+          entryValue[_valuePath] = value;
         }
+        value = entryValue;
       }
 
-      list.add(<String, dynamic>{'id': id, 'value': value});
+      list.add(<String, Object?>{'id': id, 'value': value});
     }
     return list;
   }
@@ -489,12 +492,10 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
 
   @override
   Future<int> getDeltaMinRevision() async =>
-      (await (_getInfoInt(_sqfliteDatabase, jdbDeltaMinRevisionKey)
-              as FutureOr<int>?) ??
-          0);
+      (await _getInfoInt(_sqfliteDatabase, jdbDeltaMinRevisionKey)) ?? 0;
 
   Future<int> _txnGetDeltaMinRevision(sqflite.Transaction txn) async =>
-      (await (_getInfoInt(txn, jdbDeltaMinRevisionKey) as FutureOr<int>?) ?? 0);
+      (await _getInfoInt(txn, jdbDeltaMinRevisionKey)) ?? 0;
 
   @override
   Future clearAll() async {
