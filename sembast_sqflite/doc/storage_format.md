@@ -13,7 +13,7 @@ Current sembast_sqflite database format is the following:
     - `value` the json encoded value of the record
     - `deleted` whether the record has been deleted
 
-Example for a notepad store (StoreRef<int, Map<String, dynamic>):
+Example for a notepad store (StoreRef<int, Map<String, Object?>):
 
 | id |store|key|value|deleted|
 |----|-----|---|-----|-------|    
