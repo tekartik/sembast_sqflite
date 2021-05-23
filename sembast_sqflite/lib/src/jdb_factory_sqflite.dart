@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:collection/collection.dart' show IterableExtension;
-import 'package:sembast/sembast.dart';
 import 'package:sembast_sqflite/src/constant_import.dart';
 import 'package:sembast_sqflite/src/jdb_import.dart' as jdb;
 import 'package:sembast_sqflite/src/jdb_import.dart';

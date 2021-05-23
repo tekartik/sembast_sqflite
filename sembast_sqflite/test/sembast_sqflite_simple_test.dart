@@ -5,7 +5,6 @@ import 'package:sembast/sembast.dart';
 import 'package:sembast/timestamp.dart';
 import 'package:sembast_sqflite/sembast_sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:test/test.dart';
 
 import 'base64_codec.dart';
 import 'ffi_setup.dart';
