@@ -5,9 +5,7 @@ import 'package:sembast_sqflite/sembast_sqflite.dart';
 import 'package:sembast_test/all_jdb_test.dart' as all_jdb_test;
 import 'package:sembast_test/all_test.dart';
 import 'package:sembast_test/jdb_test_common.dart';
-import 'package:sembast_test/test_common.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:test/test.dart';
 
 import 'ffi_setup.dart';
 

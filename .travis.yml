@@ -1,6 +1,5 @@
 language: dart
 sudo: required
-dist: bionic
 dart:
   - stable
   - beta
@@ -11,4 +10,4 @@ script:
   - dart tool/travis.dart
 matrix:
   allow_failures:
-    - dart: stable
+    - dart: dev
