@@ -39,3 +39,20 @@ await db.close();
 
 The file could be a relative path to the default platform database path
 or an absolute path, pointing to a sqlite database.
+
+## Options
+
+In case you encounter some sqlite out of memory error or if you want to speed up initial load
+you can modify the import page size (number of rows read at once).
+
+```dart
+// Change import page size (default is 1000)
+// to use less memory
+factory.sqfliteImportPageSize = 100;
+```
+
+```dart
+// Change import page size (default is 1000)
+// to speed up loading
+factory.sqfliteImportPageSize = 100000;
+```

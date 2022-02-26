@@ -1,6 +1,7 @@
 import 'package:sembast/sembast.dart';
 import 'package:sembast_sqflite/src/database_factory_sqflite.dart' as src;
 import 'package:sqflite_common/sqlite_api.dart' as sqflite;
+export 'src/database_factory_sqflite.dart' show DatabaseFactorySqfliteExtension;
 
 /// Sembast factory on top of sqflite.
 ///
