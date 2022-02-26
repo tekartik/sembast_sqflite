@@ -11,7 +11,7 @@ import 'ffi_setup.dart';
 
 Future main() async {
   await testSetup();
-  //await databaseFactoryFfi.setLogLevel(sqfliteLogLevelVerbose);
+  // await databaseFactoryFfi.debugSetLogLevel(sqfliteLogLevelVerbose);
   var factory = getDatabaseFactorySqflite(databaseFactoryFfi);
 
   group('idb_mem', () {
@@ -28,6 +28,35 @@ Future main() async {
       await record.put(db, 'value');
       expect(await record.get(db), 'value');
       await db.close();
+    });
+
+    test('2 records imported one by one from sqlite', () async {
+      // await databaseFactoryFfi.debugSetLogLevel(sqfliteLogLevelVerbose);
+      var importPageSize = factory.sqfliteImportPageSize;
+      try {
+        // Change import page size (default is 1000)
+        // to use less memory
+        factory.sqfliteImportPageSize = 100;
+        var store = StoreRef<String, String>.main();
+        var record1 = store.record('key1');
+        var record2 = store.record('key2');
+        await factory.deleteDatabase('test');
+        var db = await factory.openDatabase('test');
+        await record1.put(db, 'value1');
+        await record2.put(db, 'value2');
+        await db.close();
+
+        db = await factory.openDatabase('test');
+        expect(await record1.get(db), 'value1');
+        expect(await record2.get(db), 'value2');
+        await db.close();
+
+        // Change import page size (default is 1000)
+        // to speed up loading
+        factory.sqfliteImportPageSize = 100000;
+      } finally {
+        factory.sqfliteImportPageSize = importPageSize;
+      }
     });
 
     test('exists', () async {

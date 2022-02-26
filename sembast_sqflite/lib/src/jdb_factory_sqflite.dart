@@ -8,6 +8,9 @@ import 'package:sembast_sqflite/src/jdb_import.dart';
 import 'package:sembast_sqflite/src/sembast_import.dart';
 import 'package:sqflite_common/sqlite_api.dart' as sqflite;
 
+/// Row count limit when importing data
+var _sqfliteImportPageSizeDefault = 1000;
+
 var _debug = false; // devWarning(true); // false
 /// The journal entry id
 const _idPath = 'id';
@@ -30,6 +33,9 @@ class JdbFactorySqflite implements jdb.JdbFactory {
 
   static const _sqfliteDbVersion = 1;
   var _lastId = 0;
+
+  /// Import page size (used on open)
+  int importPageSize = _sqfliteImportPageSizeDefault;
 
   /// The sqflite factory used
   final sqflite.DatabaseFactory sqfliteDatabaseFactory;
@@ -161,22 +167,33 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
 
   final JdbFactorySqflite _factory;
 
-  //final _entries = <JdbEntrySqflite>[];
   String get _debugPrefix => '[sqflite-$_id]';
 
-  // For now read all at once
-  // TODO read by <n> records
+  /// Read entries by page (default 1000)
   @override
   Stream<jdb.JdbReadEntry> get entries {
     late StreamController<jdb.JdbReadEntry> ctlr;
     ctlr = StreamController<jdb.JdbReadEntry>(onListen: () async {
-      var maps = await _sqfliteDatabase.query(_entryStore);
-      for (var map in maps) {
-        var entry = _entryFromCursor(map);
-        if (_debug) {
-          print('$_debugPrefix reading entry $entry');
+      var limit = _factory.importPageSize;
+      var lastId = 0;
+
+      while (true) {
+        var maps = await _sqfliteDatabase.query(_entryStore,
+            orderBy: '$_idPath ASC',
+            limit: limit,
+            where: lastId > 0 ? '$_idPath > $lastId' : null);
+        for (var map in maps) {
+          var entry = _entryFromCursor(map);
+          if (_debug) {
+            print('$_debugPrefix reading entry $entry');
+          }
+          ctlr.add(entry);
         }
-        ctlr.add(entry);
+        if (maps.isEmpty) {
+          break;
+        } else {
+          lastId = maps.last[_idPath] as int;
+        }
       }
       await ctlr.close();
     });
