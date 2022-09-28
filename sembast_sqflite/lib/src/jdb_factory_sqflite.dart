@@ -183,7 +183,15 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
             limit: limit,
             where: lastId > 0 ? '$_idPath > $lastId' : null);
         for (var map in maps) {
-          var entry = _entryFromCursor(map);
+          var entry;
+
+          try{
+            entry = _entryFromCursor(map);
+          } catch(e){
+            ctlr.addError(e);
+            break;
+          }
+
           if (_debug) {
             print('$_debugPrefix reading entry $entry');
           }
