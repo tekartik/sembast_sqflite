@@ -3,7 +3,7 @@ description: A simple command-line application.
 publish_to: none
 
 environment:
-  sdk: '>=2.10.0-0 <3.0.0'
+  sdk: '>=2.18.0-0 <3.0.0'
 
 dependencies:
   dev_test:
