@@ -1,6 +1,6 @@
-## 2.1.0-1
+## 2.1.0-2
 
-* super strict-casts
+* support strict-casts
 
 ## 2.0.1
 

@@ -159,8 +159,8 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     var deleted = map[_deletedPath] == 1;
     var entry = jdb.JdbReadEntry()
       ..id = map[_idPath] as int
-      ..record =
-          StoreRef(map[_storePath] as String).record(map[_keyPath] as Key)
+      ..record = StoreRef<Key?, Value?>(map[_storePath] as String)
+          .record(map[_keyPath] as Key)
 
       // Deleted is an int
       ..deleted = deleted;
