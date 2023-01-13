@@ -99,7 +99,7 @@ Future main() async {
     });
 
     test('format custom type', () async {
-      var store = StoreRef<String, Object?>.main();
+      var store = StoreRef<String, Object>.main();
       var record = store.record('key');
       await factory.deleteDatabase('test');
       var db = await factory.openDatabase('test');
@@ -123,7 +123,7 @@ Future main() async {
     test('format custom type with codec', () async {
       var codec =
           SembastCodec(signature: 'base64', codec: SembaseBase64Codec());
-      var store = StoreRef<String, Object?>.main();
+      var store = StoreRef<String, Object>.main();
       var record = store.record('key');
       await factory.deleteDatabase('test');
       var db = await factory.openDatabase('test', codec: codec);

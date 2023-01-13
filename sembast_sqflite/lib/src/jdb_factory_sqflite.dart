@@ -156,12 +156,17 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   final _revisionUpdateController = StreamController<int>();
 
   jdb.JdbReadEntry _entryFromCursor(Map map) {
+    var deleted = map[_deletedPath] == 1;
     var entry = jdb.JdbReadEntry()
       ..id = map[_idPath] as int
-      ..record = StoreRef(map[_storePath] as String).record(map[_keyPath])
-      ..value = _decodeRecordValue(map[_valuePath] as String?)
+      ..record = StoreRef<Key?, Value?>(map[_storePath] as String)
+          .record(map[_keyPath] as Key)
+
       // Deleted is an int
-      ..deleted = map[_deletedPath] == 1;
+      ..deleted = deleted;
+    if (!deleted) {
+      entry.value = _decodeRecordValue(map[_valuePath] as String) as Object;
+    }
     return entry;
   }
 
@@ -330,18 +335,12 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     for (var jdbWriteEntry in entries) {
       var store = jdbWriteEntry.record.store.name;
       var key = jdbWriteEntry.record.key;
-      var value = _encodeRecordValue(jdbWriteEntry.value);
 
-      /*
-      var sqfliteKey = await index.getKey([store, key]);
-      if (sqfliteKey != null) {
-        if (_debug) {
-          print('$_debugPrefix deleting entry $sqfliteKey');
-        }
-        await objectStore.delete(sqfliteKey);
+      // Handle deleted
+      String? value;
+      if (!jdbWriteEntry.deleted) {
+        value = _encodeRecordValue(jdbWriteEntry.value);
       }
-       */
-
       lastEntryId = await txn.insert(
           _entryStore,
           <String, Object?>{

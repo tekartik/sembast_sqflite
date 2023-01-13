@@ -1,3 +1,7 @@
+## 2.1.0
+
+* support strict-casts
+
 ## 2.0.1
 
 * Add `DatabaseFactory.sqfliteImportPageSize` to control how data is imported from sqlite
