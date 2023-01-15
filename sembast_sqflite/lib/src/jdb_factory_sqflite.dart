@@ -339,7 +339,12 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       // Handle deleted
       String? value;
       if (!jdbWriteEntry.deleted) {
-        value = _encodeRecordValue(jdbWriteEntry.value);
+        var valueOrNull = jdbWriteEntry.valueOrNull;
+        if (valueOrNull == null) {
+          print('Invalid entry $jdbWriteEntry');
+          continue;
+        }
+        value = _encodeRecordValue(valueOrNull);
       }
       lastEntryId = await txn.insert(
           _entryStore,
@@ -488,13 +493,13 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   Future compact() async {
     await _sqfliteDatabase.transaction((txn) async {
       var deltaMinRevision = await _txnGetDeltaMinRevision(txn);
-      var currentRevision = await _txnGetRevision(txn);
+      var currentRevision = (await _txnGetRevision(txn)) ?? 0;
       var newDeltaMinRevision = deltaMinRevision;
       var maps = await txn.query(_entryStore,
           columns: [_idPath], where: '$_deletedPath = 1');
       for (var map in maps) {
-        var revision = map[_idPath] as int;
-        if (revision > newDeltaMinRevision && revision <= currentRevision!) {
+        var revision = (map[_idPath] as int?) ?? 0;
+        if (revision > newDeltaMinRevision && revision <= currentRevision) {
           newDeltaMinRevision = revision;
           await txn.delete(_entryStore, where: '$_idPath = $revision');
         }
