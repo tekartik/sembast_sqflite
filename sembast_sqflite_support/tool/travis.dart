@@ -1,10 +1,13 @@
 import 'dart:io';
-import 'package:pub_semver/pub_semver.dart';
+
 import 'package:path/path.dart';
 import 'package:process_run/shell.dart';
+import 'package:pub_semver/pub_semver.dart';
+
 import 'linux_setup.dart' as linux_setup;
 
 bool get runningOnTravis => Platform.environment['TRAVIS'] == 'true';
+
 Future main() async {
   var nnbdEnabled = dartVersion > Version(2, 12, 0, pre: '0');
   if (nnbdEnabled) {
