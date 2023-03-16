@@ -2,3 +2,7 @@
 .idea/
 *.iml
 .vscode/
+
+# Local overrides
+.local/
+pubspec_overrides.yaml

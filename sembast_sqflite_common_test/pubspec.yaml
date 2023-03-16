@@ -32,5 +32,3 @@ dev_dependencies:
 dependency_overrides:
   sembast_sqflite:
     path: ../sembast_sqflite
-  # sembast:
-  #  path: ../../sembast.dart/sembast

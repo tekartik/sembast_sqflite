@@ -96,6 +96,15 @@ Future main() async {
         }
       ]);
       await sqfliteDb.close();
+
+      db = await factory.openDatabase('test');
+      await record.delete(db);
+
+      sqfliteDb = await databaseFactoryFfi.openDatabase('test');
+      expect(await sqfliteDb.query('entry'), [
+        {'id': 2, 'store': '_main', 'key': 'key', 'value': null, 'deleted': 1}
+      ]);
+      await sqfliteDb.close();
     });
 
     test('format custom type', () async {
