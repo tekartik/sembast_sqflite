@@ -1,3 +1,7 @@
+## 2.1.1-1
+
+* Support Async content codec
+
 ## 2.1.0+1
 
 * support strict-casts
