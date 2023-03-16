@@ -1,2 +1,4 @@
-export 'package:sembast/src/api/protected/jdb.dart'; // ignore: implementation_imports
-export 'package:sembast/src/type_adapter_impl.dart';
+export 'package:sembast/src/api/protected/codec.dart';
+export 'package:sembast/src/api/protected/database.dart';
+export 'package:sembast/src/api/protected/jdb.dart';
+export 'package:sembast/src/api/protected/type.dart';
