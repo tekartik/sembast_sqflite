@@ -12,6 +12,7 @@ dependencies:
   sqflite_common_ffi:
   sqflite_common:
 dev_dependencies:
+  path:
   test:
   process_run: '>=0.10.3'
   sembast_test:
