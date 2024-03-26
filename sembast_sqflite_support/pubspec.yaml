@@ -1,9 +1,9 @@
 name: sembast_sqflite_support
-description: A simple command-line application.
+description: sembast_sqflite_support
 publish_to: none
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
   dev_test:
