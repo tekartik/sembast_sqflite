@@ -34,10 +34,12 @@ class JdbFactorySqflite implements jdb.JdbFactory {
   Future<jdb.JdbDatabase> open(String path, DatabaseOpenOptions options) async {
     var id = ++_lastId;
     if (_debug) {
+      // ignore: avoid_print
       print('[sqflite-$id] opening $path');
     }
     Future initDatabase(sqflite.Database db) async {
       if (_debug) {
+        // ignore: avoid_print
         print('[sqflite-$id] creating database $path');
       }
       var batch = db.batch();
@@ -93,15 +95,20 @@ class JdbFactorySqflite implements jdb.JdbFactory {
   Future delete(String path) async {
     try {
       if (_debug) {
+        // ignore: avoid_print
         print('[sqflite] deleting $path');
       }
       databases.remove(path);
       await sqfliteDatabaseFactory.deleteDatabase(path);
       if (_debug) {
+        // ignore: avoid_print
         print('[sqflite] deleted $path');
       }
     } catch (e) {
-      print(e);
+      if (_debug) {
+        // ignore: avoid_print
+        print(e);
+      }
     }
   }
 

@@ -80,6 +80,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
             asyncCodecFutures.add(_asyncCodeLock.synchronized(() async {
               var decoded = await decodeReadEntryAsync(entry);
               if (_debug) {
+                // ignore: avoid_print
                 print('$_debugPrefix reading async entry $entry');
               }
               ctlr.add(decoded);
@@ -87,6 +88,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
           } else {
             var entry = _entryFromCursorSync(map);
             if (_debug) {
+              // ignore: avoid_print
               print('$_debugPrefix reading entry $entry');
             }
             ctlr.add(entry);
@@ -121,6 +123,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
         }
       }
       if (_debug) {
+        // ignore: avoid_print
         print('$_debugPrefix closing');
       }
       _closed = true;
@@ -240,6 +243,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       // Save the revision in memory!
       jdbWriteEntry.revision = lastEntryId;
       if (_debug) {
+        // ignore: avoid_print
         print('$_debugPrefix added entry $lastEntryId $jdbWriteEntry');
       }
     }
@@ -281,6 +285,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       for (var map in maps) {
         var entry = _entryFromCursorSync(map);
         if (_debug) {
+          // ignore: avoid_print
           print('$_debugPrefix reading entry after revision $entry');
         }
         ctlr.add(entry);

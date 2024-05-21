@@ -15,6 +15,7 @@ DatabaseFactorySqflite asDatabaseFactorySqflite(
   try {
     return databaseFactory as DatabaseFactorySqflite;
   } catch (e) {
+    // ignore: avoid_print
     print(
         'Invalid databaseFactory ${databaseFactory.runtimeType} type, expecting DatabaseFactorySqlite.');
     rethrow;

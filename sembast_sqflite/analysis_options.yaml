@@ -18,10 +18,7 @@ analyzer:
 
 linter:
   rules:
-  # these rules are documented on and in the same order as
-  # the Dart Lint rules page to make maintenance easier
-  # http://dart-lang.github.io/linter/lints/
-
+  - avoid_print
   # === error rules ===
   - avoid_empty_else
   - avoid_slow_async_io
