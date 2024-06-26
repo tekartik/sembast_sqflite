@@ -73,7 +73,7 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
         var maps = await _sqfliteDatabase.query(sqlEntryTable,
             orderBy: '$sqlIdKey ASC',
             limit: limit,
-            where: lastId > 0 ? '$sqlIdKey > $lastId' : null);
+            where: '$sqlIdKey > $lastId');
         for (var map in maps) {
           if (hasAsyncCodec) {
             var entry = _encodedEntryFromCursor(map);
