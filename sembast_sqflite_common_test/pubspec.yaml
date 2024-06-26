@@ -11,16 +11,16 @@ dependencies:
   sembast:
   sqflite_common_ffi:
   sqflite_common:
-dev_dependencies:
   path:
-  test:
-  process_run: '>=0.10.3'
   sembast_test:
     git:
       url: https://github.com/tekartik/sembast.dart
       path: sembast_test
       ref: dart3a
     version: '>=0.3.1'
+dev_dependencies:
+  test:
+  process_run: '>=0.10.3'
   build_runner: '>=0.9.0'
   build_web_compilers: '>=0.4.0+4'
   build_test: '>=0.10.2+5'

@@ -1,7 +1,7 @@
 name: sembast_sqflite
 description: sembast NoSQL database support on top of sqflite, cross process safe database.
 homepage: https://github.com/tekartik/sembast_sqflite/tree/master/sembast_sqflite
-version: 2.2.0
+version: 2.2.0+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
