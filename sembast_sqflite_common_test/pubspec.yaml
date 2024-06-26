@@ -9,8 +9,8 @@ environment:
 dependencies:
   sembast_sqflite: '>=2.1.0 <4.0.0'
   sembast:
-  sqflite_common_ffi:
-  sqflite_common:
+  sqflite_common_ffi: '>=2.2.0-dev.5'
+  sqflite_common: '>=2.5.4'
   path:
   sembast_test:
     git:

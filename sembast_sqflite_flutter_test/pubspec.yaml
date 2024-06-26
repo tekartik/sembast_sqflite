@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  sqflite:
+  sqflite: '>=2.3.3+1'
   sembast:
   sqlite3_flutter_libs:
   sembast_sqflite: '>=2.2.0'
