@@ -4,7 +4,7 @@ version: 0.5.0
 publish_to: none
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: ^3.5.0
 
 dependencies:
   sembast_sqflite: '>=2.1.0 <4.0.0'
