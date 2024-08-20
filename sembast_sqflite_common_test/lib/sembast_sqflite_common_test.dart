@@ -15,7 +15,7 @@ Future defineSembastSqfliteTests(
   var factory = testContext.factory;
   var sqlFactory = testContext.sqfliteDatabaseFactory;
   defineTests(testContext);
-  all_jdb_test.defineTests(testContext);
+  all_jdb_test.defineJdbTests(testContext);
 
   test('int vs String key', () async {
     var intStore = intMapStoreFactory.store('int');
