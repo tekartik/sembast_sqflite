@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:collection/collection.dart' show IterableExtension;
 import 'package:sembast_sqflite/src/jdb_import.dart' as jdb;
 import 'package:sembast_sqflite/src/jdb_import.dart';
 import 'package:sembast_sqflite/src/sql_constant.dart';
@@ -114,24 +113,7 @@ class JdbFactorySqflite implements jdb.JdbFactory {
 
   @override
   Future<bool> exists(String path) async {
-    late sqflite.Database db;
-    try {
-      db = await sqfliteDatabaseFactory.openDatabase(path,
-          options: sqflite.OpenDatabaseOptions(readOnly: true));
-
-      var meta = (await db.query(sqlInfoTable,
-              where: '$sqlKeyKey = ?', whereArgs: [jdb.metaKey]))
-          .firstWhereOrNull((_) => true);
-      if (meta is Map && meta!['sembast'] is int) {
-        return true;
-      }
-    } catch (_) {
-    } finally {
-      try {
-        await db.close();
-      } catch (_) {}
-    }
-    return false;
+    return await sqfliteDatabaseFactory.databaseExists(path);
   }
 
   @override
