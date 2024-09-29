@@ -1,5 +1,5 @@
 @TestOn('vm || browser')
-library sembast_web.test.sembast_io_api_test;
+library;
 
 import 'package:sembast_sqflite/sembast_sqflite.dart';
 import 'package:test/test.dart';

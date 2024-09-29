@@ -1,5 +1,5 @@
 @TestOn('vm')
-library sembast_sqflite_test.test.ffi_test;
+library;
 
 import 'package:path/path.dart';
 import 'package:sembast_sqflite_common_test/sembast_sqflite_common_test.dart';
