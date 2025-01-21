@@ -9,8 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  sqflite: '>=2.3.3+1'
-  sembast:
+  sqflite: ">=2.4.0"
+  sembast: ">=3.7.4+3"
   sqlite3_flutter_libs:
   sembast_sqflite: '>=2.2.0'
   sembast_sqflite_common_test:
@@ -30,11 +30,11 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
-  sqflite_common_ffi: '>=2.0.0-nullsafety.0 <4.0.0'
-  test:
-  process_run: '>=0.10.3'
-  build_runner: '>=0.9.0'
-  build_web_compilers: '>=0.4.0+4'
+  sqflite_common_ffi: ">=2.3.4"
+  test: ">=1.24.0"
+  process_run: ">=1.2.1+1"
+  build_runner: ">=2.4.13"
+  build_web_compilers: ">=4.0.11"
   build_test: '>=0.10.2+5'
   tekartik_lints_flutter:
     git:
