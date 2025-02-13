@@ -8,8 +8,9 @@ import 'package:sembast_sqflite_common_test/test.dart';
 import 'ffi_setup.dart' as setup;
 import 'ffi_setup.dart';
 
-var testPath =
-    absolute(join('.dart_tool', 'sembast_sqflite_test', 'idb', 'databases'));
+var testPath = absolute(
+  join('.dart_tool', 'sembast_sqflite_test', 'idb', 'databases'),
+);
 
 Future main() async {
   await setup.testSetup();

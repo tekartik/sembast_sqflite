@@ -1,3 +1,7 @@
+## 2.2.1
+
+* Require dart 3.7
+
 ## 2.2.0+4
 
 * dart 3 support

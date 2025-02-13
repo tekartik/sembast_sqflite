@@ -7,17 +7,19 @@ import 'package:sqflite_common/sqlite_api.dart' as sqflite;
 class DatabaseFactorySqflite extends DatabaseFactoryJdb {
   /// Web factory.
   DatabaseFactorySqflite(sqflite.DatabaseFactory sqfliteDatabaseFactory)
-      : super(JdbFactorySqflite(sqfliteDatabaseFactory));
+    : super(JdbFactorySqflite(sqfliteDatabaseFactory));
 }
 
 DatabaseFactorySqflite asDatabaseFactorySqflite(
-    DatabaseFactory databaseFactory) {
+  DatabaseFactory databaseFactory,
+) {
   try {
     return databaseFactory as DatabaseFactorySqflite;
   } catch (e) {
     // ignore: avoid_print
     print(
-        'Invalid databaseFactory ${databaseFactory.runtimeType} type, expecting DatabaseFactorySqlite.');
+      'Invalid databaseFactory ${databaseFactory.runtimeType} type, expecting DatabaseFactorySqlite.',
+    );
     rethrow;
   }
 }

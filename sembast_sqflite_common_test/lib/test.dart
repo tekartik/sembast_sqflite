@@ -6,8 +6,9 @@ import 'package:sqflite_common/sqflite.dart' as sqflite;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as ffi;
 
 /// The factory on ffi
-DatabaseFactory sembastDatabaseFactorySqfliteFfi =
-    getDatabaseFactorySqflite(ffi.databaseFactoryFfi);
+DatabaseFactory sembastDatabaseFactorySqfliteFfi = getDatabaseFactorySqflite(
+  ffi.databaseFactoryFfi,
+);
 
 /// The test context
 class DatabaseTestContextSqfliteFfi extends DatabaseTestContextSqfliteBase {

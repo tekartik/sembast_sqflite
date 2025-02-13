@@ -7,5 +7,5 @@ export 'src/database_factory_sqflite.dart' show DatabaseFactorySqfliteExtension;
 ///
 /// Build on top of sqflite_common.
 DatabaseFactory getDatabaseFactorySqflite(
-        sqflite.DatabaseFactory sqfliteDatabaseFactory) =>
-    src.DatabaseFactorySqflite(sqfliteDatabaseFactory);
+  sqflite.DatabaseFactory sqfliteDatabaseFactory,
+) => src.DatabaseFactorySqflite(sqfliteDatabaseFactory);

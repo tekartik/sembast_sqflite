@@ -11,7 +11,8 @@ import 'package:sqflite_common/sqflite.dart' as sqflite;
 import 'package:sqflite_common/sqflite_dev.dart';
 
 Future defineSembastSqfliteTests(
-    DatabaseTestContextSqfliteCommon testContext) async {
+  DatabaseTestContextSqfliteCommon testContext,
+) async {
   var factory = testContext.factory;
   var sqlFactory = testContext.sqfliteDatabaseFactory;
   defineTests(testContext);
@@ -59,16 +60,17 @@ Future defineSembastSqfliteTests(
     await factory.deleteDatabase(fakeDbPath);
 
     // Create a fake sembast database without AUTOINCREMENT
-    var fakeSqlDb = await sqlFactory.openDatabase(fakeDbPath,
-        options: sqflite.OpenDatabaseOptions(
-            version: 1,
-            onCreate: (db, version) async {
-              await db.execute('''
+    var fakeSqlDb = await sqlFactory.openDatabase(
+      fakeDbPath,
+      options: sqflite.OpenDatabaseOptions(
+        version: 1,
+        onCreate: (db, version) async {
+          await db.execute('''
               CREATE TABLE info (
                 id TEXT PRIMARY KEY,
                 value TEXT
               )''');
-              await db.execute('''
+          await db.execute('''
               CREATE TABLE entry (
                 /* id INTEGER PRIMARY KEY AUTOINCREMENT, */
                 id INTEGER,
@@ -78,7 +80,9 @@ Future defineSembastSqfliteTests(
                 deleted INTEGER,
                 UNIQUE(store, key)
               )''');
-            }));
+        },
+      ),
+    );
 
     // Copy data from database to fake database
     var sqlDb = await sqlFactory.openDatabase(dbPath);

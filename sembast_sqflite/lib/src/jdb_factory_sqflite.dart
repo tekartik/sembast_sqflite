@@ -62,24 +62,29 @@ class JdbFactorySqflite implements jdb.JdbFactory {
               ''');
       batch.execute('DROP INDEX IF EXISTS $sqlRecordIndex');
       batch.execute(
-          'CREATE UNIQUE INDEX $sqlRecordIndex ON $sqlEntryTable($sqlStoreKey, $sqlKeyKey)');
+        'CREATE UNIQUE INDEX $sqlRecordIndex ON $sqlEntryTable($sqlStoreKey, $sqlKeyKey)',
+      );
       batch.execute('DROP INDEX IF EXISTS $sqlDeletedIndex');
       batch.execute(
-          'CREATE INDEX $sqlDeletedIndex ON $sqlEntryTable($sqlDeletedKey)');
+        'CREATE INDEX $sqlDeletedIndex ON $sqlEntryTable($sqlDeletedKey)',
+      );
       await batch.commit(noResult: true);
     }
 
-    var sqfliteDb = await sqfliteDatabaseFactory.openDatabase(path,
-        options: sqflite.OpenDatabaseOptions(
-            version: _sqfliteDbVersion,
-            onCreate: (db, version) async {
-              await initDatabase(db);
-            },
-            onUpgrade: (db, oldVersion, newVersion) async {
-              if (oldVersion < _sqfliteDbVersion) {
-                await initDatabase(db);
-              }
-            }));
+    var sqfliteDb = await sqfliteDatabaseFactory.openDatabase(
+      path,
+      options: sqflite.OpenDatabaseOptions(
+        version: _sqfliteDbVersion,
+        onCreate: (db, version) async {
+          await initDatabase(db);
+        },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < _sqfliteDbVersion) {
+            await initDatabase(db);
+          }
+        },
+      ),
+    );
 
     var db = JdbDatabaseSqflite(this, sqfliteDb, id, path, options);
 

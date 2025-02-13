@@ -18,7 +18,8 @@ void main() async {
   setUpAll(() async {
     if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
       await testContext.sqfliteDatabaseFactory.setDatabasesPath(
-          await sqflite_plugin.databaseFactorySqflitePlugin.getDatabasesPath());
+        await sqflite_plugin.databaseFactorySqflitePlugin.getDatabasesPath(),
+      );
     }
   });
   group('sembast_sqflite_ffi', () {

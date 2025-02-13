@@ -92,8 +92,8 @@ Future main() async {
           'store': '_main',
           'key': 'key',
           'value': '"value"',
-          'deleted': null
-        }
+          'deleted': null,
+        },
       ]);
       await sqfliteDb.close();
 
@@ -102,7 +102,7 @@ Future main() async {
 
       sqfliteDb = await databaseFactoryFfi.openDatabase('test');
       expect(await sqfliteDb.query('entry'), [
-        {'id': 2, 'store': '_main', 'key': 'key', 'value': null, 'deleted': 1}
+        {'id': 2, 'store': '_main', 'key': 'key', 'value': null, 'deleted': 1},
       ]);
       await sqfliteDb.close();
     });
@@ -123,15 +123,17 @@ Future main() async {
           'store': '_main',
           'key': 'key',
           'value': '{"@Timestamp":"1970-01-01T00:00:01.000000002Z"}',
-          'deleted': null
-        }
+          'deleted': null,
+        },
       ]);
       await sqfliteDb.close();
     });
 
     test('format custom type with codec', () async {
-      var codec =
-          SembastCodec(signature: 'base64', codec: SembaseBase64Codec());
+      var codec = SembastCodec(
+        signature: 'base64',
+        codec: SembaseBase64Codec(),
+      );
       var store = StoreRef<String, Object>.main();
       var record = store.record('key');
       await factory.deleteDatabase('test');
@@ -148,8 +150,8 @@ Future main() async {
           'key': 'key',
           'value':
               'eyJAVGltZXN0YW1wIjoiMTk3MC0wMS0wMVQwMDowMDowMS4wMDAwMDAwMDJaIn0=',
-          'deleted': null
-        }
+          'deleted': null,
+        },
       ]);
       await sqfliteDb.close();
 

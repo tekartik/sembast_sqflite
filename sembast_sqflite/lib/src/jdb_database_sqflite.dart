@@ -17,8 +17,13 @@ var _debug = false; // devWarning(true); // false
 /// In memory database.
 class JdbDatabaseSqflite implements jdb.JdbDatabase {
   /// New in memory database.
-  JdbDatabaseSqflite(this._factory, this._sqfliteDatabase, this._id, this._path,
-      this._options);
+  JdbDatabaseSqflite(
+    this._factory,
+    this._sqfliteDatabase,
+    this._id,
+    this._path,
+    this._options,
+  );
 
   final sqflite.Database _sqfliteDatabase;
   final int _id;
@@ -44,8 +49,13 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       }
     }
     var recordKey = map[sqlKeyKey] as Key;
-    var entry =
-        JdbReadEntryEncoded(id, storeName, recordKey, deleted, valueEncoded);
+    var entry = JdbReadEntryEncoded(
+      id,
+      storeName,
+      recordKey,
+      deleted,
+      valueEncoded,
+    );
     return entry;
   }
 
@@ -65,46 +75,52 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   Stream<jdb.JdbReadEntry> get entries {
     late StreamController<jdb.JdbReadEntry> ctlr;
     var hasAsyncCodec = this.hasAsyncCodec;
-    ctlr = StreamController<jdb.JdbReadEntry>(onListen: () async {
-      var limit = _factory.importPageSize;
-      var lastId = 0;
-      var asyncCodecFutures = <Future>[];
-      while (true) {
-        var maps = await _sqfliteDatabase.query(sqlEntryTable,
+    ctlr = StreamController<jdb.JdbReadEntry>(
+      onListen: () async {
+        var limit = _factory.importPageSize;
+        var lastId = 0;
+        var asyncCodecFutures = <Future>[];
+        while (true) {
+          var maps = await _sqfliteDatabase.query(
+            sqlEntryTable,
             orderBy: '$sqlIdKey ASC',
             limit: limit,
-            where: '$sqlIdKey > $lastId');
-        for (var map in maps) {
-          if (hasAsyncCodec) {
-            var entry = _encodedEntryFromCursor(map);
-            asyncCodecFutures.add(_asyncCodeLock.synchronized(() async {
-              var decoded = await decodeReadEntryAsync(entry);
+            where: '$sqlIdKey > $lastId',
+          );
+          for (var map in maps) {
+            if (hasAsyncCodec) {
+              var entry = _encodedEntryFromCursor(map);
+              asyncCodecFutures.add(
+                _asyncCodeLock.synchronized(() async {
+                  var decoded = await decodeReadEntryAsync(entry);
+                  if (_debug) {
+                    // ignore: avoid_print
+                    print('$_debugPrefix reading async entry $entry');
+                  }
+                  ctlr.add(decoded);
+                }),
+              );
+            } else {
+              var entry = _entryFromCursorSync(map);
               if (_debug) {
                 // ignore: avoid_print
-                print('$_debugPrefix reading async entry $entry');
+                print('$_debugPrefix reading entry $entry');
               }
-              ctlr.add(decoded);
-            }));
-          } else {
-            var entry = _entryFromCursorSync(map);
-            if (_debug) {
-              // ignore: avoid_print
-              print('$_debugPrefix reading entry $entry');
+              ctlr.add(entry);
             }
-            ctlr.add(entry);
+          }
+          if (maps.isEmpty) {
+            break;
+          } else {
+            lastId = maps.last[sqlIdKey] as int;
           }
         }
-        if (maps.isEmpty) {
-          break;
-        } else {
-          lastId = maps.last[sqlIdKey] as int;
+        if (hasAsyncCodec) {
+          await Future.wait(asyncCodecFutures);
         }
-      }
-      if (hasAsyncCodec) {
-        await Future.wait(asyncCodecFutures);
-      }
-      await ctlr.close();
-    });
+        await ctlr.close();
+      },
+    );
     return ctlr.stream;
   }
 
@@ -144,10 +160,15 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       _getInfoEntry(_sqfliteDatabase, id);
 
   Future<jdb.JdbInfoEntry> _getInfoEntry(
-      sqflite.DatabaseExecutor executor, String id) async {
-    var map = (await executor.query(sqlInfoTable,
-            columns: [sqlValueKey], where: '$sqlIdKey = ?', whereArgs: [id]))
-        .firstWhereOrNull((_) => true);
+    sqflite.DatabaseExecutor executor,
+    String id,
+  ) async {
+    var map = (await executor.query(
+      sqlInfoTable,
+      columns: [sqlValueKey],
+      where: '$sqlIdKey = ?',
+      whereArgs: [id],
+    )).firstWhereOrNull((_) => true);
     return _infoEntryFromMap(id, map);
   }
 
@@ -156,11 +177,14 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       _setInfoEntry(_sqfliteDatabase, entry);
 
   Future _setInfoEntry(
-      sqflite.DatabaseExecutor executor, jdb.JdbInfoEntry entry) async {
+    sqflite.DatabaseExecutor executor,
+    jdb.JdbInfoEntry entry,
+  ) async {
     var value = _encodeValue(entry.value);
-    await executor.insert(
-        sqlInfoTable, <String, Object?>{sqlIdKey: entry.id, sqlValueKey: value},
-        conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
+    await executor.insert(sqlInfoTable, <String, Object?>{
+      sqlIdKey: entry.id,
+      sqlValueKey: value,
+    }, conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
   }
 
   Future _txnSetInfoEntry(sqflite.Transaction txn, jdb.JdbInfoEntry entry) =>
@@ -175,10 +199,13 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   }
 
   Future _putInfoInt(
-          sqflite.DatabaseExecutor executor, String id, int revision) =>
-      executor.insert(sqlInfoTable,
-          <String, Object?>{sqlIdKey: id, sqlValueKey: _encodeValue(revision)},
-          conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
+    sqflite.DatabaseExecutor executor,
+    String id,
+    int revision,
+  ) => executor.insert(sqlInfoTable, <String, Object?>{
+    sqlIdKey: id,
+    sqlValueKey: _encodeValue(revision),
+  }, conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
 
   Future _putRevision(sqflite.DatabaseExecutor executor, int revision) =>
       _putInfoInt(executor, sqlRevisionKey, revision);
@@ -187,16 +214,20 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       _putRevision(txn, revision);
 
   Future _putDeltaMinRevision(
-          sqflite.DatabaseExecutor executor, int revision) =>
-      _putInfoInt(executor, jdbDeltaMinRevisionKey, revision);
+    sqflite.DatabaseExecutor executor,
+    int revision,
+  ) => _putInfoInt(executor, jdbDeltaMinRevisionKey, revision);
 
   Future _txnPutDeltaMinRevision(sqflite.Transaction txn, int revision) =>
       _putDeltaMinRevision(txn, revision);
 
   Future<int?> _getInfoInt(sqflite.DatabaseExecutor executor, String id) async {
-    var map = (await executor.query(sqlInfoTable,
-            columns: [sqlValueKey], where: '$sqlIdKey = ?', whereArgs: [id]))
-        .firstWhereOrNull((_) => true);
+    var map = (await executor.query(
+      sqlInfoTable,
+      columns: [sqlValueKey],
+      where: '$sqlIdKey = ?',
+      whereArgs: [id],
+    )).firstWhereOrNull((_) => true);
     if (map != null) {
       return _decodeValue(map[sqlValueKey] as String?) as int?;
     }
@@ -217,7 +248,9 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
 
   // Return the last entryId
   Future<int?> _txnAddEntries(
-      sqflite.Transaction txn, List<jdb.JdbWriteEntryEncoded> entries) async {
+    sqflite.Transaction txn,
+    List<jdb.JdbWriteEntryEncoded> entries,
+  ) async {
     int? lastEntryId;
     for (var jdbWriteEntry in entries) {
       var store = jdbWriteEntry.storeName;
@@ -231,15 +264,12 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
         value = jsonEncode(value);
       }
 
-      lastEntryId = await txn.insert(
-          sqlEntryTable,
-          <String, Object?>{
-            sqlStoreKey: store,
-            sqlKeyKey: key,
-            sqlValueKey: value,
-            if (deleted) sqlDeletedKey: 1
-          },
-          conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
+      lastEntryId = await txn.insert(sqlEntryTable, <String, Object?>{
+        sqlStoreKey: store,
+        sqlKeyKey: key,
+        sqlValueKey: value,
+        if (deleted) sqlDeletedKey: 1,
+      }, conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
       // Save the revision in memory!
       jdbWriteEntry.revision = lastEntryId;
       if (_debug) {
@@ -278,21 +308,25 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   @override
   Stream<jdb.JdbEntry> entriesAfterRevision(int revision) {
     late StreamController<jdb.JdbEntry> ctlr;
-    ctlr = StreamController<jdb.JdbEntry>(onListen: () async {
-      // TODO by page?
-      var maps = await _sqfliteDatabase.query(sqlEntryTable,
-          where: '$sqlIdKey > $revision');
-      for (var map in maps) {
-        var entry = _entryFromCursorSync(map);
-        if (_debug) {
-          // ignore: avoid_print
-          print('$_debugPrefix reading entry after revision $entry');
+    ctlr = StreamController<jdb.JdbEntry>(
+      onListen: () async {
+        // TODO by page?
+        var maps = await _sqfliteDatabase.query(
+          sqlEntryTable,
+          where: '$sqlIdKey > $revision',
+        );
+        for (var map in maps) {
+          var entry = _entryFromCursorSync(map);
+          if (_debug) {
+            // ignore: avoid_print
+            print('$_debugPrefix reading entry after revision $entry');
+          }
+          ctlr.add(entry);
         }
-        ctlr.add(entry);
-      }
 
-      await ctlr.close();
-    });
+        await ctlr.close();
+      },
+    );
     return ctlr.stream;
   }
 
@@ -311,7 +345,8 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
 
   @override
   Future<StorageJdbWriteResult> writeIfRevision(
-      StorageJdbWriteQuery query) async {
+    StorageJdbWriteQuery query,
+  ) async {
     var entriesEncoded = await encodeEntries(query.entries);
     return await _sqfliteDatabase.transaction((txn) async {
       var expectedRevision = query.revision ?? 0;
@@ -333,7 +368,10 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
         }
       }
       return StorageJdbWriteResult(
-          revision: readRevision, query: query, success: success);
+        revision: readRevision,
+        query: query,
+        success: success,
+      );
     });
   }
 
@@ -348,7 +386,9 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
   }
 
   Future<List<Map<String, Object?>>> _txnStoreToDebugMap(
-      sqflite.Transaction txn, String name) async {
+    sqflite.Transaction txn,
+    String name,
+  ) async {
     var isEntryStore = name == sqlEntryTable;
     var list = <Map<String, Object?>>[];
     var maps = await txn.query(name, orderBy: '$sqlIdKey ASC');
@@ -394,8 +434,11 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
       var deltaMinRevision = await _txnGetDeltaMinRevision(txn);
       var currentRevision = (await _txnGetRevision(txn)) ?? 0;
       var newDeltaMinRevision = deltaMinRevision;
-      var maps = await txn.query(sqlEntryTable,
-          columns: [sqlIdKey], where: '$sqlDeletedKey = 1');
+      var maps = await txn.query(
+        sqlEntryTable,
+        columns: [sqlIdKey],
+        where: '$sqlDeletedKey = 1',
+      );
       for (var map in maps) {
         var revision = (map[sqlIdKey] as int?) ?? 0;
         if (revision > newDeltaMinRevision && revision <= currentRevision) {
