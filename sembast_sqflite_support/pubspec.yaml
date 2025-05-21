@@ -6,7 +6,7 @@ environment:
   sdk: ^3.7.0
 
 dependencies:
-  dev_build: ">=1.1.0+2"
+  dev_build: ">=1.1.2"
 
 dev_dependencies:
   tekartik_lints:
