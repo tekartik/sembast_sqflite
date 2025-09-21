@@ -16,7 +16,6 @@ dependencies:
     git:
       url: https://github.com/tekartik/sembast.dart
       path: sembast_test
-      ref: dart3a
     version: '>=0.3.1'
 dev_dependencies:
   test: ">=1.24.0"
@@ -27,7 +26,6 @@ dev_dependencies:
   tekartik_lints:
     git:
       url: https://github.com/tekartik/common.dart
-      ref: dart3a
       path: packages/lints
     version: '>=0.2.0'
 dependency_overrides:
