@@ -31,7 +31,9 @@ Future defineSembastSqfliteTests(
       db = await factory.openDatabase(dbPath);
       var intRecords = await intStore.query().getSnapshots(db);
       var stringRecords = await stringStore.query().getSnapshots(db);
+      // ignore: avoid_print
       print(intRecords);
+      // ignore: avoid_print
       print(stringRecords);
       expect(intRecords.first.key, isA<int>());
       expect(stringRecords.first.key, isA<String>());

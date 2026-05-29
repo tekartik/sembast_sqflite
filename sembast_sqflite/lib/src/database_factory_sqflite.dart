@@ -10,6 +10,7 @@ class DatabaseFactorySqflite extends DatabaseFactoryJdb {
     : super(JdbFactorySqflite(sqfliteDatabaseFactory));
 }
 
+/// Cast to implementation
 DatabaseFactorySqflite asDatabaseFactorySqflite(
   DatabaseFactory databaseFactory,
 ) {
