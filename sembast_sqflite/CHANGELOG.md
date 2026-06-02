@@ -1,3 +1,7 @@
+## 2.2.2
+
+* Require dart 3.12
+
 ## 2.2.1+1
 
 * Require dart 3.10
