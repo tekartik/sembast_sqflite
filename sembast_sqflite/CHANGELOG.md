@@ -1,3 +1,7 @@
+## 2.2.3
+
+* Add `sembast-sqflite-setup` agent skill in `skills/`, installable with `dart run skills@ get`
+
 ## 2.2.2
 
 * Require dart 3.12
