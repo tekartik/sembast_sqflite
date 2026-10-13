@@ -1,3 +1,14 @@
+## 2.2.4
+
+* Fix delta reads (changes made by another instance) with an async codec, and
+  read errors (such as a corrupted value) now complete the read with the error
+  instead of hanging.
+* Require sembast 3.9.0 (endless write retry after another instance compacted
+  the database).
+* New databases: `store` and `key` are `NOT NULL`, no duplicate `record` index.
+* Document the single sqflite connection per path and the plain sqlite file
+  limits.
+
 ## 2.2.3
 
 * Add `sembast-sqflite-setup` agent skill in `skills/`, installable with `dart run skills@ get`

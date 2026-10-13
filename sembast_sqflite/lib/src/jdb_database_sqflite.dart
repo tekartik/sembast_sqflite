@@ -5,7 +5,6 @@ import 'package:collection/collection.dart' show IterableExtension;
 import 'package:sembast_sqflite/src/jdb_import.dart';
 import 'package:sembast_sqflite/src/sembast_import.dart';
 import 'package:sqflite_common/sqlite_api.dart' as sqflite;
-import 'package:synchronized/synchronized.dart';
 
 import 'constant_import.dart';
 import 'jdb_factory_sqflite.dart';
@@ -14,9 +13,9 @@ import 'sql_constant.dart';
 
 var _debug = false; // devWarning(true); // false
 
-/// In memory database.
+/// Sqflite jdb database.
 class JdbDatabaseSqflite implements jdb.JdbDatabase {
-  /// New in memory database.
+  /// New sqflite jdb database.
   JdbDatabaseSqflite(
     this._factory,
     this._sqfliteDatabase,
@@ -59,66 +58,55 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     return entry;
   }
 
-  jdb.JdbReadEntry _entryFromCursorSync(Map map) {
-    var encoded = _encodedEntryFromCursor(map);
-    return decodeReadEntrySync(encoded);
-  }
-
   final JdbFactorySqflite _factory;
 
   String get _debugPrefix => '[sqflite-$_id]';
 
-  final _asyncCodeLock = Lock();
-
   /// Read entries by page (default 1000)
   @override
-  Stream<jdb.JdbReadEntry> get entries {
+  Stream<jdb.JdbReadEntry> get entries => _entries();
+
+  /// The entries after [afterRevision] (all by default), by page, in id
+  /// order, decoded through the codec (sync or async).
+  ///
+  /// A read or decode error is added to the stream, which is then closed (it
+  /// used to never complete).
+  Stream<jdb.JdbReadEntry> _entries({int afterRevision = 0}) {
     late StreamController<jdb.JdbReadEntry> ctlr;
     var hasAsyncCodec = this.hasAsyncCodec;
     ctlr = StreamController<jdb.JdbReadEntry>(
       onListen: () async {
-        var limit = _factory.importPageSize;
-        var lastId = 0;
-        var asyncCodecFutures = <Future>[];
-        while (true) {
-          var maps = await _sqfliteDatabase.query(
-            sqlEntryTable,
-            orderBy: '$sqlIdKey ASC',
-            limit: limit,
-            where: '$sqlIdKey > $lastId',
-          );
-          for (var map in maps) {
-            if (hasAsyncCodec) {
-              var entry = _encodedEntryFromCursor(map);
-              asyncCodecFutures.add(
-                _asyncCodeLock.synchronized(() async {
-                  var decoded = await decodeReadEntryAsync(entry);
-                  if (_debug) {
-                    // ignore: avoid_print
-                    print('$_debugPrefix reading async entry $entry');
-                  }
-                  ctlr.add(decoded);
-                }),
-              );
-            } else {
-              var entry = _entryFromCursorSync(map);
+        try {
+          var limit = _factory.importPageSize;
+          var lastId = afterRevision;
+          while (true) {
+            var maps = await _sqfliteDatabase.query(
+              sqlEntryTable,
+              orderBy: '$sqlIdKey ASC',
+              limit: limit,
+              where: '$sqlIdKey > $lastId',
+            );
+            for (var map in maps) {
+              var encoded = _encodedEntryFromCursor(map);
+              var entry = hasAsyncCodec
+                  ? await decodeReadEntryAsync(encoded)
+                  : decodeReadEntrySync(encoded);
               if (_debug) {
                 // ignore: avoid_print
                 print('$_debugPrefix reading entry $entry');
               }
               ctlr.add(entry);
             }
-          }
-          if (maps.isEmpty) {
-            break;
-          } else {
+            if (maps.length < limit) {
+              break;
+            }
             lastId = maps.last[sqlIdKey] as int;
           }
+        } catch (e, st) {
+          ctlr.addError(e, st);
+        } finally {
+          await ctlr.close();
         }
-        if (hasAsyncCodec) {
-          await Future.wait(asyncCodecFutures);
-        }
-        await ctlr.close();
       },
     );
     return ctlr.stream;
@@ -305,30 +293,10 @@ class JdbDatabaseSqflite implements jdb.JdbDatabase {
     return List.generate(count, (index) => generateStringKey()).toList();
   }
 
+  /// Same as [entries] after [revision] (by page, async codec supported).
   @override
-  Stream<jdb.JdbEntry> entriesAfterRevision(int revision) {
-    late StreamController<jdb.JdbEntry> ctlr;
-    ctlr = StreamController<jdb.JdbEntry>(
-      onListen: () async {
-        // TODO by page?
-        var maps = await _sqfliteDatabase.query(
-          sqlEntryTable,
-          where: '$sqlIdKey > $revision',
-        );
-        for (var map in maps) {
-          var entry = _entryFromCursorSync(map);
-          if (_debug) {
-            // ignore: avoid_print
-            print('$_debugPrefix reading entry after revision $entry');
-          }
-          ctlr.add(entry);
-        }
-
-        await ctlr.close();
-      },
-    );
-    return ctlr.stream;
-  }
+  Stream<jdb.JdbEntry> entriesAfterRevision(int revision) =>
+      _entries(afterRevision: revision);
 
   @override
   Future<int> getRevision() async {

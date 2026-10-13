@@ -12,7 +12,12 @@ var _sqfliteImportPageSizeDefault = 1000;
 
 var _debug = false; // devWarning(true); // false
 
-/// In memory jdb.
+/// Sqflite jdb factory.
+///
+/// Each database is opened with the default sqflite options, i.e. a single
+/// instance per path: another open then close of the same path through the
+/// same sqflite factory (directly with sqflite or with another sembast
+/// sqflite factory) closes the connection sembast uses.
 class JdbFactorySqflite implements jdb.JdbFactory {
   /// Sqflite factory
   JdbFactorySqflite(this.sqfliteDatabaseFactory);
@@ -53,17 +58,16 @@ class JdbFactorySqflite implements jdb.JdbFactory {
       batch.execute('''
               CREATE TABLE $sqlEntryTable (
                 $sqlIdKey INTEGER PRIMARY KEY AUTOINCREMENT,
-                $sqlStoreKey TEXT NON NULL,
-                $sqlKeyKey BLOB NON NULL,
+                $sqlStoreKey TEXT NOT NULL,
+                $sqlKeyKey BLOB NOT NULL,
                 $sqlValueKey TEXT,
                 $sqlDeletedKey INTEGER,
                 UNIQUE($sqlStoreKey, $sqlKeyKey)
               )
               ''');
+      // The UNIQUE(store, key) constraint already creates that index, the
+      // former explicit one is only dropped.
       batch.execute('DROP INDEX IF EXISTS $sqlRecordIndex');
-      batch.execute(
-        'CREATE UNIQUE INDEX $sqlRecordIndex ON $sqlEntryTable($sqlStoreKey, $sqlKeyKey)',
-      );
       batch.execute('DROP INDEX IF EXISTS $sqlDeletedIndex');
       batch.execute(
         'CREATE INDEX $sqlDeletedIndex ON $sqlEntryTable($sqlDeletedKey)',
@@ -116,6 +120,8 @@ class JdbFactorySqflite implements jdb.JdbFactory {
     }
   }
 
+  /// True if a sqlite database exists at [path] (not checked to be a sembast
+  /// one).
   @override
   Future<bool> exists(String path) async {
     return await sqfliteDatabaseFactory.databaseExists(path);

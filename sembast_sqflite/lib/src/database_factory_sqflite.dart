@@ -3,9 +3,9 @@ import 'package:sembast_sqflite/src/jdb_factory_sqflite.dart';
 import 'package:sembast_sqflite/src/jdb_import.dart';
 import 'package:sqflite_common/sqlite_api.dart' as sqflite;
 
-/// Web factory.
+/// Sembast factory on top of sqflite.
 class DatabaseFactorySqflite extends DatabaseFactoryJdb {
-  /// Web factory.
+  /// Sembast factory on top of [sqfliteDatabaseFactory].
   DatabaseFactorySqflite(sqflite.DatabaseFactory sqfliteDatabaseFactory)
     : super(JdbFactorySqflite(sqfliteDatabaseFactory));
 }

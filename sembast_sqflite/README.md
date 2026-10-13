@@ -61,4 +61,8 @@ access and safe cross process database storage and transaction mechanism.
 
 * `sembast_sqflite` should be used from the main isolate only
 * While being cross-process safe, you might encounter locked access when using multiple transactions are in progress, which could happen while debugging.
+* Do not open (and close) the same database file with sqflite directly or with another sqflite based factory while
+  sembast has it open: sqflite opens a single instance per path by default, so closing it there closes the connection
+  sembast uses.
+* Opening sembast on an existing plain sqlite file replaces its `entry` and `info` tables.
 * Applications should not rely on internal [storage format](https://github.com/tekartik/sembast_sqflite/tree/master/sembast_sqflite/doc/storage_format.md)

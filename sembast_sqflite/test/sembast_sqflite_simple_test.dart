@@ -14,7 +14,7 @@ Future main() async {
   // await databaseFactoryFfi.debugSetLogLevel(sqfliteLogLevelVerbose);
   var factory = getDatabaseFactorySqflite(databaseFactoryFfi);
 
-  group('idb_mem', () {
+  group('sembast_sqflite', () {
     test('open', () async {
       var store = StoreRef<String, String>.main();
       var record = store.record('key');
@@ -24,8 +24,8 @@ Future main() async {
       expect(await record.get(db), 'value');
       await db.close();
 
+      // Persisted: read back after reopening, without a new put.
       db = await factory.openDatabase('test');
-      await record.put(db, 'value');
       expect(await record.get(db), 'value');
       await db.close();
     });
@@ -99,6 +99,8 @@ Future main() async {
 
       db = await factory.openDatabase('test');
       await record.delete(db);
+      // Closed before sqflite opens the same file (single instance per path).
+      await db.close();
 
       sqfliteDb = await databaseFactoryFfi.openDatabase('test');
       expect(await sqfliteDb.query('entry'), [
@@ -155,8 +157,8 @@ Future main() async {
       ]);
       await sqfliteDb.close();
 
+      // Persisted: read back after reopening, without a new put.
       db = await factory.openDatabase('test', codec: codec);
-      await record.put(db, Timestamp(1, 2));
       expect(await record.get(db), Timestamp(1, 2));
       await db.close();
 
