@@ -6,7 +6,8 @@ description: >-
   robust storage), creating the factory with
   getDatabaseFactorySqflite(sqfliteDatabaseFactory) from sqflite on Flutter
   iOS/Android/macOS or from sqflite_common_ffi (databaseFactoryFfi,
-  sqfliteFfiInit) on desktop, Dart VM and unit tests, database path handling,
+  sqfliteFfiInit) on desktop, Dart VM and unit tests, database path handling
+  (getDatabasesPath, path_provider getApplicationSupportDirectory),
   openDatabase options, sqfliteImportPageSize, limitations (main isolate only,
   no web) and how the unchanged sembast API is used afterwards.
 ---
@@ -100,6 +101,13 @@ final DatabaseFactory databaseFactorySqflite = getDatabaseFactorySqflite(
   (`path_provider`'s `getApplicationSupportDirectory()` in Flutter, or a
   directory you own), joined with `package:path`, and create the directory
   before opening. Only tests should rely on the ffi default location.
+* On iOS the default databases directory is the Documents folder, visible in
+  the Files app when file sharing is enabled. A new app that wants it hidden
+  can pass an absolute path in `getApplicationSupportDirectory()` (the same
+  folder sembast io uses, see the `sembast-database-setup` skill). An app
+  already released must keep its path: a new path is a new, empty database.
+* In Flutter `main()`, call `WidgetsFlutterBinding.ensureInitialized()`
+  before the first sqflite or `path_provider` call.
 * `factory.deleteDatabase(path)` and `factory.databaseExists(path)` delegate to
   the sqflite factory with the same path rules. `deleteDatabase()` swallows
   errors and never throws.
@@ -226,7 +234,7 @@ import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as ffi;
 
 // For Flutter web, use `databaseFactoryWeb` from package:sembast_web in a
-// conditional import instead of this file.
+// conditional import instead of this file (sembast-web-setup skill).
 
 DatabaseFactory? _factory;
 

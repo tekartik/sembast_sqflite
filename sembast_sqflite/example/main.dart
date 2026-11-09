@@ -3,10 +3,12 @@ import 'package:sembast_sqflite/sembast_sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 Future main() async {
-  // The sqflite base factory
-
+  // The sqflite base factory (ffi: Windows, Linux, macOS, Dart VM).
+  // In a Flutter iOS/Android/macOS app, use sqflite.databaseFactory from
+  // package:sqflite instead.
   var factory = getDatabaseFactorySqflite(databaseFactoryFfi);
 
+  // A relative path is in the sqflite databases folder (getDatabasesPath()).
   var db = await factory.openDatabase('example.db');
   // Use the main store for storing key values as String
   var store = StoreRef<String, String>.main();
@@ -21,4 +23,7 @@ Future main() async {
 
   print('url: $url');
   print('username: $username');
+
+  // Close the database when done.
+  await db.close();
 }

@@ -1,3 +1,8 @@
+## 2.2.4+1
+
+* Documentation: fix the README example (no sembast_test import), platforms, setup,
+  database path notes, ffi setup doc fix, dartdoc, skill updated
+
 ## 2.2.4
 
 * Fix delta reads (changes made by another instance) with an async codec, and

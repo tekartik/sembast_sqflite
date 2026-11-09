@@ -2,13 +2,25 @@
 
 sembast DB for flutter on top of sqflite.
 
-* Supports both iOS and Android
-* Supports Flutter Web through sembast_web.
-* Supports Dart VM (Desktop) through sembast
+`sembast_sqflite` provides a [sembast](https://pub.dev/packages/sembast) `DatabaseFactory` that stores the
+database in a SQLite file. The API to read and write data is the sembast API, unchanged.
 
-See [sembast](https://github.com/tekartik/sembast.dart) for API usage
+* Flutter Android, iOS and macOS through [`sqflite`](https://pub.dev/packages/sqflite)
+* Flutter Windows, Linux, macOS, Dart VM and unit tests through
+  [`sqflite_common_ffi`](https://pub.dev/packages/sqflite_common_ffi)
+* Not on the web: use [`sembast_web`](https://pub.dev/packages/sembast_web) there (see
+  [One code base for all platforms](https://github.com/tekartik/sembast.dart/blob/master/sembast/doc/open.md#one-code-base-for-all-platforms))
+
+See [sembast](https://github.com/tekartik/sembast.dart) for API usage, starting with
+[Getting started](https://github.com/tekartik/sembast.dart/blob/master/sembast/README.md#getting-started).
 
 ## Setup
+
+```sh
+flutter pub add sembast sembast_sqflite sqflite
+# Desktop, Dart VM and tests
+dart pub add sembast sembast_sqflite sqflite_common_ffi
+```
 
 [Setup instructions](https://github.com/tekartik/sembast_sqflite/tree/master/sembast_sqflite/doc/setup.md) for all 
 platforms (Flutter/VM, iOS/Android/MacOS, Windows/Linux)
@@ -18,36 +30,44 @@ platforms (Flutter/VM, iOS/Android/MacOS, Windows/Linux)
 Example for Flutter (iOS/Android/MacOS):
 
 ```dart
+import 'package:sembast/sembast.dart';
 import 'package:sembast_sqflite/sembast_sqflite.dart';
-import 'package:sembast_test/test_common.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
-export 'package:sembast/sembast.dart';
+/// Sembast sqflite based database factory, created once.
+///
+/// Supports iOS/Android/MacOS for now.
+final databaseFactorySqflite = getDatabaseFactorySqflite(
+  sqflite.databaseFactory,
+);
 
-Future main() async {
-  /// Sembast sqflite based database factory.
-  ///
-  /// Supports iOS/Android/MacOS for now.
-  final factory = getDatabaseFactorySqflite(sqflite.databaseFactory);
+/// Opens the app database. Call it once at startup and keep the result.
+Future<Database> openAppDatabase() {
+  // A relative path is in the sqflite databases folder (getDatabasesPath()).
+  return databaseFactorySqflite.openDatabase('my_app.db');
+}
 
+Future<void> demo(Database db) async {
   // Define the store, key is a string, value is a string
   var store = StoreRef<String, String>.main();
   // Define the record
   var record = store.record('my_key');
 
-  // Open the database
-  var db = await factory.openDatabase('test.db');
-
   // Write a record
   await record.put(db, 'my_value');
 
-  // print store content
-  print(await store.stream(db).first);
-
-  // Close the database
-  await db.close();
+  // Read it
+  print(await record.get(db));
 }
 ```
+
+* `sembast_sqflite.dart` does not export sembast: also import `package:sembast/sembast.dart`.
+* Import sqflite with a prefix (`as sqflite`): both packages have a `Database` and a `DatabaseFactory` class.
+* To open the database in `main()` before `runApp()`, call `WidgetsFlutterBinding.ensureInitialized()` first.
+* A relative path is in `getDatabasesPath()`: the app databases folder on Android, the Documents folder on iOS and
+  macOS (visible in the Files app on iOS when file sharing is enabled). An absolute path, for example in
+  `path_provider`'s `getApplicationSupportDirectory()`, is used as is. An existing app must keep its path: a new path
+  opens a new, empty database.
 
 ## Why
 

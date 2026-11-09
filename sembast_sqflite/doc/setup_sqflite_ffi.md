@@ -34,7 +34,9 @@ final databaseFactorySqfliteFfi =
 A sembast database can be opened/created this way:
 
 ```dart
-var factory = databaseFactorySqflite;
+// Optional, loads the sqlite library on Windows.
+sqflite_ffi.sqfliteFfiInit();
+var factory = databaseFactorySqfliteFfi;
 var db = await factory.openDatabase('test.db');
 
 await db.close();
