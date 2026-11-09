@@ -1,5 +1,7 @@
-## 2.2.4+1
+## 2.2.4+2
 
+* Documentation: changes of another process (`checkForChanges`), one path spelling per file, no
+  corruption recovery, foreign sqlite files, storage format fixed
 * Documentation: fix the README example (no sembast_test import), platforms, setup,
   database path notes, ffi setup doc fix, dartdoc, skill updated
 * Fix delta reads (changes made by another instance) with an async codec, and

@@ -41,7 +41,8 @@ final DatabaseFactory databaseFactorySqflite = getDatabaseFactorySqflite(
   background service or widget process, two desktop instances), or when a
   robust, well known on-disk format matters more than a single text file.
   Each write is a SQLite transaction, so a crash never leaves a half-written
-  journal to recover.
+  journal to recover. Each process sees the others' changes on its next write
+  or `db.checkForChanges()` call (see Runtime behavior).
 * Prefer it over `sembast_io` for large databases: initial load is done by
   pages (`sqfliteImportPageSize` rows at a time) from an indexed table and
   deleted records are compacted in place by SQL, instead of rewriting one big
@@ -114,7 +115,9 @@ final DatabaseFactory databaseFactorySqflite = getDatabaseFactorySqflite(
 * The file is a SQLite database with a fixed schema (`info` and `entry`
   tables). Never point it at an existing SQLite file used for something else:
   when sqflite reports version 0 (a file without the sembast schema) the
-  tables `info` and `entry` are dropped and recreated in that file.
+  tables `info` and `entry` are dropped and recreated in that file; a file
+  with a version fails to open (`no such table: entry`) and a version above 1
+  is set back to 1.
 * Do not read or write the SQLite tables directly and do not rely on the
   storage format. Use sembast's export/import
   (`package:sembast/utils/sembast_import_export.dart`) to move data.
@@ -125,9 +128,11 @@ final DatabaseFactory databaseFactorySqflite = getDatabaseFactorySqflite(
   sembast options with the sembast semantics; nothing sqflite specific.
   `version`/`onVersionChanged` are sembast's own versioning stored in the
   `info` table, unrelated to the internal sqflite schema version.
-* `DatabaseMode.defaultMode` is `neverFails`: a corrupted database is
-  deleted and recreated. Use `DatabaseMode.existing` or
-  `DatabaseMode.readOnly` when losing data silently is not acceptable.
+* `DatabaseMode.defaultMode` is `neverFails`; here it only means a missing
+  database is created. There is no corruption recovery: an unreadable record
+  value (bad JSON, codec error) makes `openDatabase()` throw in every mode and
+  nothing is deleted. `DatabaseMode.existing` fails when the file does not
+  exist; `DatabaseMode.empty` deletes it first.
 * Without a codec each record value is JSON encoded into the `value` TEXT
   column. Sembast custom types (`Timestamp`, `Blob`) are
   supported and encoded by sembast before storage.
@@ -145,7 +150,9 @@ final DatabaseFactory databaseFactorySqflite = getDatabaseFactorySqflite(
 * Lower it (for example 100) when records are big and SQLite reports an out
   of memory error while opening; raise it (10000 or more) to speed up the
   initial load of many small records. Set it before `openDatabase()`; it is a
-  factory property, not a per-database one. `0` is not allowed (assertion).
+  factory property, not a per-database one. Use a value of 1 or more: `0`
+  asserts, and `0` (release) or a negative value makes every open fail
+  (`Bad state: No element`).
 * The extension only works on a factory returned by
   `getDatabaseFactorySqflite()`; on any other `DatabaseFactory` the cast
   throws.
@@ -154,7 +161,13 @@ final DatabaseFactory databaseFactorySqflite = getDatabaseFactorySqflite(
 
 * Every `Database.close()` closes the underlying sqflite database. Close on
   app exit or before deleting the file, and do not open the same path twice
-  concurrently in one process.
+  concurrently in one process. Always spell a file's path the same way:
+  `'app.db'` and its absolute path give two sembast databases on one sqflite
+  connection, closing one closes the other (`database_closed`).
+* Changes written by another process are not pushed to this one. They are
+  loaded on this database's next write, or by `db.checkForChanges()` (call it
+  when the app resumes, after a background service ran, or on a timer).
+  Listeners (`onSnapshot`) fire when they are loaded, not before.
 * Cross-process safety relies on SQLite locking. While another process (or a
   paused debugger) holds a write transaction, writes wait on the SQLite lock;
   expect "database is locked" style delays when debugging two processes.

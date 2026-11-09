@@ -33,6 +33,9 @@ export 'src/database_factory_sqflite.dart' show DatabaseFactorySqfliteExtension;
 /// once: a relative path is in the sqflite databases folder
 /// (`getDatabasesPath()`), an absolute path is used as is.
 ///
+/// Cross process safe: the changes written by another process are loaded on
+/// the next write of this database or by `db.checkForChanges()`.
+///
 /// Not available on the web: use `databaseFactoryWeb` from
 /// `package:sembast_web` there.
 DatabaseFactory getDatabaseFactorySqflite(

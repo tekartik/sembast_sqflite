@@ -77,12 +77,18 @@ might consider that it is not a well known robust database system.
 Here sqflite is used as the based of a journal database that provides data to sembast, allowing a fast all-in-memory 
 access and safe cross process database storage and transaction mechanism.
 
-# Usage
+## Usage notes
 
 * `sembast_sqflite` should be used from the main isolate only
 * While being cross-process safe, you might encounter locked access when using multiple transactions are in progress, which could happen while debugging.
+* Changes written by another process are not pushed to this one: they are loaded on this database's next write, or
+  when you call `db.checkForChanges()` (for example when the app resumes). Listeners (`onSnapshot`) fire then.
 * Do not open (and close) the same database file with sqflite directly or with another sqflite based factory while
   sembast has it open: sqflite opens a single instance per path by default, so closing it there closes the connection
-  sembast uses.
-* Opening sembast on an existing plain sqlite file replaces its `entry` and `info` tables.
+  sembast uses. The same goes for one file opened through two spellings of its path (`'my_app.db'` and its absolute
+  path): always use the same path.
+* Never point it at an existing sqlite file used for something else: a file without a sqlite user version gets its
+  `entry` and `info` tables replaced, a file with one fails to open (`no such table: entry`) and a user version above
+  1 is set back to 1.
+* A corrupted record (unreadable value) makes `openDatabase` throw, in every mode: nothing is deleted.
 * Applications should not rely on internal [storage format](https://github.com/tekartik/sembast_sqflite/tree/master/sembast_sqflite/doc/storage_format.md)
