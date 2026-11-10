@@ -32,11 +32,15 @@ regression tests. A consumer only has to provide the sqflite
         url: https://github.com/tekartik/sembast_sqflite
         path: sembast_sqflite_common_test
       version: '>=0.5.0'
+    sembast: '>=3.10.1'
     test:
   ```
-  It pulls `sembast`, `sembast_sqflite`, `sqflite_common`,
-  `sqflite_common_ffi` and `sembast_test` (itself a git dependency on
-  `https://github.com/tekartik/sembast.dart`, `path: sembast_test`).
+  It pulls `sembast` (3.10.1 at least: with an older one the shared jdb
+  tests on another process's changes fail), `sembast_sqflite`,
+  `sqflite_common`, `sqflite_common_ffi` and `sembast_test` (itself a git
+  dependency on `https://github.com/tekartik/sembast.dart`,
+  `path: sembast_test`). Declare the ones you import yourself
+  (`sqflite_common_ffi`, `sqflite_common`, `path`).
 * Testing the **sqflite plugin** (Flutter iOS/Android/macOS) additionally
   needs `sqflite`, `flutter_test` and `integration_test` in the consumer; that
   combination must run as a Flutter `integration_test`, not as a unit test.
@@ -73,8 +77,11 @@ regression tests. A consumer only has to provide the sqflite
   the same BLOB key column, an `entry` row with a `NULL` id (a database created
   without `AUTOINCREMENT`) being skipped instead of crashing, and loading 100
   records of 500 KB with `sqfliteImportPageSize` lowered to 20 — the Android
-  cursor-window regression. That last one writes ~50 MB and is slow; expect the
-  suite to take minutes and give it a generous timeout.
+  cursor-window regression. That last one writes ~50 MB: the whole suite takes
+  about 30 s with ffi on a desktop, longer on a device.
+* Not in the shared suite: the sembast_sqflite 2.2.4 regressions (async codec
+  delta read, corrupted value, schema) are in this package's
+  `test/sembast_sqflite_regression_test.dart`, ffi only.
 
 ### Setting it up correctly
 
@@ -82,10 +89,10 @@ regression tests. A consumer only has to provide the sqflite
   `package:sqflite_common_ffi/sqflite_ffi.dart` once in `main()` before the
   context is used: required on Windows, harmless elsewhere.
 * Point the databases directory somewhere you own before defining the tests:
-  `await ctx.sqfliteDatabaseFactory.setDatabasesPath(path)` (extension from
-  `package:sqflite_common/sqflite_dev.dart`) with an `absolute()` path under
-  `.dart_tool/`. The suite opens databases by relative name, so without this
-  the files land in the ffi default location.
+  `await ctx.sqfliteDatabaseFactory.setDatabasesPath(path)` (a method of the
+  sqflite `DatabaseFactory`) with an `absolute()` path under `.dart_tool/`.
+  The suite opens databases by relative name, so without this the files land
+  in the ffi default location.
 * On Flutter mobile with the ffi factory, set the databases path to
   `databaseFactorySqflitePlugin.getDatabasesPath()`; the ffi default directory
   is not writable there.
@@ -112,7 +119,6 @@ library;
 import 'package:path/path.dart';
 import 'package:sembast_sqflite_common_test/sembast_sqflite_common_test.dart';
 import 'package:sembast_sqflite_common_test/test.dart';
-import 'package:sqflite_common/sqflite_dev.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:test/test.dart';
 
@@ -135,7 +141,6 @@ Future<void> main() async {
 
 ```dart
 import 'package:sembast_sqflite_common_test/test.dart';
-import 'package:sqflite_common/sqflite.dart' as sqflite;
 
 /// Context for any sqflite_common factory.
 ///
@@ -143,8 +148,7 @@ import 'package:sqflite_common/sqflite.dart' as sqflite;
 /// `databaseFactorySqflitePlugin` from `package:sqflite/sqflite.dart`, and the
 /// resulting test file must be a `flutter test integration_test/...` run.
 class DatabaseTestContextSqflitePlugin extends DatabaseTestContextSqfliteBase {
-  DatabaseTestContextSqflitePlugin(sqflite.DatabaseFactory sqfliteFactory)
-    : super(sqfliteFactory);
+  DatabaseTestContextSqflitePlugin(super.sqfliteFactory);
 }
 ```
 
@@ -227,6 +231,9 @@ void main() {
 * Forgetting `sqfliteFfiInit()`: sqlite3 is not loaded on Windows.
 * Not calling `setDatabasesPath`: databases are created in the ffi default
   location (and on a mobile device, in a directory that is not writable).
+* Two test files running the suite on the same databases folder at the same
+  time (`database is locked`, `disk I/O error`): use `concurrency: 1` in
+  `dart_test.yaml` or one folder per file.
 * Awaiting `defineSembastSqfliteTests(...)` at top level instead of calling it
   inside a `group`, or calling it outside `main()`.
 * Expecting `test.dart` or `sembast_sqflite_common_test.dart` to bring `group`

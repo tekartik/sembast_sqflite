@@ -1,3 +1,7 @@
+## 0.5.0
+
+* Requires sembast 3.10.1 (the shared jdb suite checks its cross process fixes).
+
 ## 0.4.0
 
 * No longer depends on flutter, sqflite must be explicitely added as a dependency.
